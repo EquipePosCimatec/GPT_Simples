@@ -32,31 +32,34 @@ client = OpenAI(api_key=chave)
 
 st.title("Chatbot - Assistente Especializado")
 
-# 3. Inicialização da variável de saída do PDF e do contexto
+# 3. Inicialização da variável de saída do PDF e do histórico do chat
 pdf_output = 'historico_conversa.pdf'
 
-# 4. Iniciar histórico do chat
 if "mensagens" not in st.session_state:
     st.session_state.mensagens = []
 
-# 5. Input para inserir a pergunta do usuário
-prompt = st.text_input("Digite sua pergunta")
+# 4. Loop para permitir conversa contínua
+while True:
+    # 5. Input para inserir a pergunta do usuário
+    prompt = st.text_input("Digite sua pergunta (ou deixe em branco para finalizar)")
 
-if prompt:
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    st.session_state.mensagens.append({"role": "user", "content": prompt})
+    if prompt:
+        if prompt.strip() == "":
+            break  # Finalizar a conversa se o usuário deixar em branco
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        st.session_state.mensagens.append({"role": "user", "content": prompt})
 
-    mensagens_para_api = st.session_state.mensagens
+        mensagens_para_api = st.session_state.mensagens
 
-    resposta = client.chat.completions.create(
-        model='gpt-3.5-turbo',
-        messages=mensagens_para_api
-    ).choices[0].message.content
+        resposta = client.chat.completions.create(
+            model='gpt-3.5-turbo',
+            messages=mensagens_para_api
+        ).choices[0].message.content
 
-    with st.chat_message("system"):
-        st.markdown(resposta)
-    st.session_state.mensagens.append({"role": "system", "content": resposta})
+        with st.chat_message("system"):
+            st.markdown(resposta)
+        st.session_state.mensagens.append({"role": "system", "content": resposta})
 
 # 6. Botão para finalizar a conversa e gerar o PDF
 if st.session_state.mensagens and st.button('Finalizar Conversa'):
