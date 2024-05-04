@@ -38,31 +38,24 @@ pdf_output = 'historico_conversa.pdf'
 if "mensagens" not in st.session_state:
     st.session_state.mensagens = []
 
-# 4. Loop para permitir conversa contínua
-while True:
-    # 5. Input para inserir a pergunta do usuário
-    prompt = st.text_input("Digite sua pergunta (ou deixe em branco para finalizar)")
+# 4. Input para inserir a pergunta do usuário
+prompt = st.text_input("Digite sua pergunta (ou deixe em branco para finalizar)", key="user_input")
 
-    if prompt:
-        if prompt.strip() == "":
-            break  # Finalizar a conversa se o usuário deixar em branco
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        st.session_state.mensagens.append({"role": "user", "content": prompt})
-
-        mensagens_para_api = st.session_state.mensagens
-
-        resposta = client.chat.completions.create(
-            model='gpt-3.5-turbo',
-            messages=mensagens_para_api
-        ).choices[0].message.content
-
-        with st.chat_message("system"):
+if prompt:
+    if prompt.strip() == "":
+        st.session_state.conversation_ended = True
+    else:
+        with st.expander("Resposta do Assistente"):
+            resposta = client.chat.completions.create(
+                model='gpt-3.5-turbo',
+                messages=st.session_state.mensagens + [{"role": "user", "content": prompt}]
+            ).choices[0].message.content
             st.markdown(resposta)
+        st.session_state.mensagens.append({"role": "user", "content": prompt})
         st.session_state.mensagens.append({"role": "system", "content": resposta})
 
-# 6. Botão para finalizar a conversa e gerar o PDF
-if st.session_state.mensagens and st.button('Finalizar Conversa'):
+# 5. Botão para finalizar a conversa e gerar o PDF
+if st.session_state.mensagens and (st.button('Finalizar Conversa') or st.session_state.get("conversation_ended", False)):
     df = pd.DataFrame(st.session_state.mensagens)
     if 'content' in df:
         df['timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -90,9 +83,8 @@ if st.session_state.mensagens and st.button('Finalizar Conversa'):
         pdf.output(pdf_output)
 
         st.session_state.reset = True
-        st.rerun()
 
-# 7. Exibir botões de download do PDF e de reiniciar a conversa
+# 6. Exibir botões de download do PDF e de reiniciar a conversa
 if "reset" in st.session_state and st.session_state.reset:
     with open(pdf_output, "rb") as file:
         st.download_button(
