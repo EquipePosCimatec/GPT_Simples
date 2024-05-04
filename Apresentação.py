@@ -15,30 +15,30 @@ st.markdown("---")
 st.title('Aplicação de Data Science e Analytics')
 
 # Introdução
-st.markdown("""Este trabalho tem como objetivo explorar a aplicação de Data Science e Analytics, com base no aprendizado da Pós Graduação do MPBA no Cimatec. Através do uso de técnicas implementadas na linguagem Python, o 
-**Servidor Gerson Yamashita**
- fez um aplicativo protótipo para demonstração, com a funcionalidade de buscar um texto específico no Diário Oficial do Tribunal de Justiça, especificamente na parte das Publicações do Minitério Público do Estado da Bahia, para verificar o texto informado consta no Diário Oficial em determinada data.""")
+st.markdown("""Este trabalho tem como objetivo explorar a aplicação de Data Science e Analytics, para contrução do TCC, com base no aprendizado da Pós Graduação do MPBA no Cimatec. Através do uso de técnicas implementadas na linguagem Python, inteligência Artificial, RAG e LLM os 
+**Servidores Carlos Stucki, Gerson Yamashita e Sandro Dantas**
+ fezeram um aplicativo protótipo para demonstração, com a funcionalidade de produção de artefatos de licitação.""")
 
 # Modelos de Machine Learning
 st.subheader('Funcionalidades do aplicativo:')
 
 # Quantidade de Páginas
 st.markdown("""
-**Quantidade de Páginas:**
-O aplicativo trás de forma imediata a quantidade de páginas do Diário Oficial, referente as publicações do MPBA, em determinada data.""")
+**Modelos dos Artefatos:**
+#O aplicativo trás de forma imediata a quantidade de páginas do Diário Oficial, referente as publicações do MPBA, em determinada data.""")
 
 # Quantidade de vezes que o texto procurado foi identificado no Diário Oficial
 st.markdown("""
-**Quantidade de vezes que o texto procurado foi identificado no Diário Oficial:**
-O aplicativo trás de forma imediata a quantidade de vezes que o texto procurado foi identificado no Diário Oficial, referente as publicações do MPBA, em determinada data.""")
+**Inserir documentos relevantes:**
+#O aplicativo trás de forma imediata a quantidade de vezes que o texto procurado foi identificado no Diário Oficial, referente as publicações do MPBA, em determinada data.""")
 
 # As páginas do Diário Oficial que o texto foi identificado
 st.markdown("""
-**As páginas do Diário Oficial que o texto foi identificado:**
-O aplicativo trás de forma imediata as páginas do Diário Oficial que o texto procurado foi identificado, referente as publicações do MPBA, em determinada data.""")
+**Geração dos artefatos de licitação:**
+#O aplicativo trás de forma imediata as páginas do Diário Oficial que o texto procurado foi identificado, referente as publicações do MPBA, em determinada data.""")
 
 
 # Link das páginas onde o texto foi identificado
-st.markdown("""
-**Link das páginas onde o texto foi identificado:**
-O aplicativo trás de forma imediata o link para acesso direto das páginas do Diário Oficial que o texto procurado foi identificado, referente as publicações do MPBA, em determinada data.""")
+#st.markdown("""
+#**Link das páginas onde o texto foi identificado:**
+#O aplicativo trás de forma imediata o link para acesso direto das páginas do Diário Oficial que o texto procurado foi identificado, referente as publicações do MPBA, em determinada data.""")
