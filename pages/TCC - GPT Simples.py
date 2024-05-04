@@ -34,79 +34,32 @@ st.title("Chatbot - Assistente Especializado")
 
 # 3. Inicialização da variável de saída do PDF e do contexto
 pdf_output = 'historico_conversa.pdf'
-if "contexto" not in st.session_state:
-    st.session_state.contexto = ""
 
-# 4. Input para inserir o contexto
-contexto_input = st.text_area("Insira um contexto que considere relevante para a conversa (Opcional):", st.session_state.contexto)
-if st.button("Confirmar Contexto"):
-    st.session_state.contexto = contexto_input
+# 4. Iniciar histórico do chat
+if "mensagens" not in st.session_state:
+    st.session_state.mensagens = []
 
-# 5. Input para definir a especialidade do assistente
-if "especialidade" not in st.session_state:
-    st.session_state.especialidade = ""
-especialidade_input = st.text_input("Defina a especialidade do assistente (ex: Python, Gestor, Contador, Estatístico):",
-                                    st.session_state.especialidade)
-if st.button("Confirmar Especialidade"):
-    st.session_state.especialidade = especialidade_input
-    st.session_state.mensagens = [{"role": 'system',
-                                   "content": f'Olá, sou um assistente especializado em {st.session_state.especialidade}. Como posso ajudar?'}]
+# 5. Input para inserir a pergunta do usuário
+prompt = st.text_input("Digite sua pergunta")
 
-# 6. Adicionar um controle deslizante para definir o limiar de moderação
-if "limiar_moderacao" not in st.session_state:
-    st.session_state.limiar_moderacao = 0.5  # Valor padrão
-limiar_moderacao = st.slider("Estabeleça o ponto de moderação (de 0.0 a 1.0):", min_value=0.0, max_value=1.0,
-                             value=st.session_state.limiar_moderacao)
-st.session_state.limiar_moderacao = limiar_moderacao
+if prompt:
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    st.session_state.mensagens.append({"role": "user", "content": prompt})
 
+    mensagens_para_api = st.session_state.mensagens
 
-# 7. Função para verificar a moderação usando a API da OpenAI
-def verificar_moderacao_openai(input_usuario):
-    try:
-        response = client.moderations.create(input=input_usuario)
-        df = pd.DataFrame(dict(response.results[0].category_scores).items(), columns=['Category', 'Value'])
-        maior_valor = df.sort_values(by='Value', ascending=False).iloc[0]
+    resposta = client.chat.completions.create(
+        model='gpt-3.5-turbo',
+        messages=mensagens_para_api
+    ).choices[0].message.content
 
-        if maior_valor['Value'] > st.session_state.limiar_moderacao:
-            return "Sua mensagem pode conter conteúdo inapropriado. Por favor, modifique sua mensagem."
-    except Exception as e:
-        print(f"Erro na moderação: {e}")
-    return None
+    with st.chat_message("system"):
+        st.markdown(resposta)
+    st.session_state.mensagens.append({"role": "system", "content": resposta})
 
-
-# 8. Iniciar ou continuar histórico do chat
-if st.session_state.especialidade and "mensagens" in st.session_state:
-    for mensagem in st.session_state.mensagens:
-        with st.chat_message(mensagem["role"]):
-            st.markdown(mensagem["content"])
-
-    prompt = st.chat_input("Digite sua pergunta")
-
-    if prompt:
-        resposta_moderacao = verificar_moderacao_openai(prompt)
-        if resposta_moderacao:
-            with st.chat_message("system"):
-                st.markdown(resposta_moderacao)
-        else:
-            with st.chat_message("user"):
-                st.markdown(prompt)
-            st.session_state.mensagens.append({"role": "user", "content": prompt})
-
-            mensagens_para_api = [
-                {"role": "system", "content": st.session_state.contexto}] if st.session_state.contexto else []
-            mensagens_para_api += st.session_state.mensagens
-
-            resposta = client.chat.completions.create(
-                model='gpt-3.5-turbo',
-                messages=mensagens_para_api
-            ).choices[0].message.content
-
-            with st.chat_message("system"):
-                st.markdown(resposta)
-            st.session_state.mensagens.append({"role": "system", "content": resposta})
-
-# 9. Botão para finalizar a conversa e gerar o PDF
-if "mensagens" in st.session_state and st.session_state.mensagens and st.button('Finalizar Conversa'):
+# 6. Botão para finalizar a conversa e gerar o PDF
+if st.session_state.mensagens and st.button('Finalizar Conversa'):
     df = pd.DataFrame(st.session_state.mensagens)
     if 'content' in df:
         df['timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -136,7 +89,7 @@ if "mensagens" in st.session_state and st.session_state.mensagens and st.button(
         st.session_state.reset = True
         st.rerun()
 
-# 10. Exibir botões de download do PDF e de reiniciar a conversa
+# 7. Exibir botões de download do PDF e de reiniciar a conversa
 if "reset" in st.session_state and st.session_state.reset:
     with open(pdf_output, "rb") as file:
         st.download_button(
@@ -148,5 +101,4 @@ if "reset" in st.session_state and st.session_state.reset:
 
     if st.button("Zerar Conversa"):
         st.session_state.clear()
-        st.session_state.especialidade = ""
         st.experimental_rerun()
