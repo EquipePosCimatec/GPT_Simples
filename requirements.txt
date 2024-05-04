@@ -1,5 +1,13 @@
 streamlit
 pandas
-requests
-PyMuPDF
+pycaret
+xgboost
+openai
+FPDF
+langchain
+pypdf
+pinecone-client
+tiktoken
+pymupdf
 unidecode
+python-dotenv
