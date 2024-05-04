@@ -37,29 +37,6 @@ pdf_output = 'historico_conversa.pdf'
 if "contexto" not in st.session_state:
     st.session_state.contexto = ""
 
-# 4. Input para inserir o contexto
-contexto_input = st.text_area("Insira um contexto que considere relevante para a conversa (Opcional):", st.session_state.contexto)
-if st.button("Confirmar Contexto"):
-    st.session_state.contexto = contexto_input
-
-# 5. Input para definir a especialidade do assistente
-if "especialidade" not in st.session_state:
-    st.session_state.especialidade = ""
-especialidade_input = st.text_input("Defina a especialidade do assistente (ex: Python, Gestor, Contador, Estatístico):",
-                                    st.session_state.especialidade)
-if st.button("Confirmar Especialidade"):
-    st.session_state.especialidade = especialidade_input
-    st.session_state.mensagens = [{"role": 'system',
-                                   "content": f'Olá, sou um assistente especializado em {st.session_state.especialidade}. Como posso ajudar?'}]
-
-# 6. Adicionar um controle deslizante para definir o limiar de moderação
-if "limiar_moderacao" not in st.session_state:
-    st.session_state.limiar_moderacao = 0.5  # Valor padrão
-limiar_moderacao = st.slider("Estabeleça o ponto de moderação (de 0.0 a 1.0):", min_value=0.0, max_value=1.0,
-                             value=st.session_state.limiar_moderacao)
-st.session_state.limiar_moderacao = limiar_moderacao
-
-
 # 7. Função para verificar a moderação usando a API da OpenAI
 def verificar_moderacao_openai(input_usuario):
     try:
