@@ -22,20 +22,20 @@ st.markdown("""Este trabalho tem como objetivo explorar a aplicação de Data Sc
 # Modelos de Machine Learning
 st.subheader('Funcionalidades do aplicativo:')
 
-# Quantidade de Páginas
+# Modelos dos Artefatos
 st.markdown("""
 **Modelos dos Artefatos:**
-#O aplicativo trás de forma imediata a quantidade de páginas do Diário Oficial, referente as publicações do MPBA, em determinada data.""")
+O aplicativo carrega os modelos dos artefatos que serão utilizados.""")
 
-# Quantidade de vezes que o texto procurado foi identificado no Diário Oficial
+# Documentos relevantes
 st.markdown("""
 **Inserir documentos relevantes:**
-#O aplicativo trás de forma imediata a quantidade de vezes que o texto procurado foi identificado no Diário Oficial, referente as publicações do MPBA, em determinada data.""")
+O aplicativo carrega documentos relevantes para a construção dos artefatos.""")
 
-# As páginas do Diário Oficial que o texto foi identificado
+# Geração dos artefatos
 st.markdown("""
 **Geração dos artefatos de licitação:**
-#O aplicativo trás de forma imediata as páginas do Diário Oficial que o texto procurado foi identificado, referente as publicações do MPBA, em determinada data.""")
+Com base nos modelos e documentos carregados, o aplicativo vai gerar os artefatos escolhidos.""")
 
 
 # Link das páginas onde o texto foi identificado
