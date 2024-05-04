@@ -25,12 +25,12 @@ st.subheader('Funcionalidades do aplicativo:')
 # Modelos dos Artefatos
 st.markdown("""
 **Modelos dos Artefatos:**
-O aplicativo carrega os modelos dos artefatos que serão utilizados.""")
+O usuário poderá carregar os modelos dos artefatos que serão utilizados no aplicativo.""")
 
 # Documentos relevantes
 st.markdown("""
 **Inserir documentos relevantes:**
-O aplicativo carrega documentos relevantes para a construção dos artefatos.""")
+O usuário poderá carregar os documentos relevantes para a construção dos artefatos no aplicativo.""")
 
 # Geração dos artefatos
 st.markdown("""
