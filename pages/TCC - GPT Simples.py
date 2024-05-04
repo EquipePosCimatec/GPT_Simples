@@ -38,23 +38,30 @@ pdf_output = 'historico_conversa.pdf'
 if "mensagens" not in st.session_state:
     st.session_state.mensagens = []
 
-# 4. Input para inserir a pergunta do usuário
-prompt = st.text_input("Digite sua pergunta (ou deixe em branco para finalizar)", key="user_input")
+# 4. Exibir histórico da conversa
+for mensagem in st.session_state.mensagens:
+    if mensagem["role"] == "user":
+        with st.expander("Você", expanded=True):
+            st.write(mensagem["content"])
+    else:
+        with st.expander("Assistente", expanded=True):
+            st.write(mensagem["content"])
+
+# 5. Input para inserir a pergunta do usuário
+prompt = st.text_input("Faça uma pergunta (ou deixe em branco para finalizar)")
 
 if prompt:
     if prompt.strip() == "":
         st.session_state.conversation_ended = True
     else:
-        with st.expander("Resposta do Assistente"):
-            resposta = client.chat.completions.create(
-                model='gpt-3.5-turbo',
-                messages=st.session_state.mensagens + [{"role": "user", "content": prompt}]
-            ).choices[0].message.content
-            st.markdown(resposta)
+        resposta = client.chat.completions.create(
+            model='gpt-3.5-turbo',
+            messages=st.session_state.mensagens + [{"role": "user", "content": prompt}]
+        ).choices[0].message.content
         st.session_state.mensagens.append({"role": "user", "content": prompt})
         st.session_state.mensagens.append({"role": "system", "content": resposta})
 
-# 5. Botão para finalizar a conversa e gerar o PDF
+# 6. Botão para finalizar a conversa e gerar o PDF
 if st.session_state.mensagens and (st.button('Finalizar Conversa') or st.session_state.get("conversation_ended", False)):
     df = pd.DataFrame(st.session_state.mensagens)
     if 'content' in df:
@@ -84,7 +91,7 @@ if st.session_state.mensagens and (st.button('Finalizar Conversa') or st.session
 
         st.session_state.reset = True
 
-# 6. Exibir botões de download do PDF e de reiniciar a conversa
+# 7. Exibir botões de download do PDF e de reiniciar a conversa
 if "reset" in st.session_state and st.session_state.reset:
     with open(pdf_output, "rb") as file:
         st.download_button(
