@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import tempfile
-from langchain.document_loaders import TextLoader, DirectoryLoader
+from langchain.document_loaders import DirectoryLoader
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import ConversationalRetrievalChain
@@ -50,10 +50,14 @@ templates = {
 # Funções de Processamento de Documentos
 
 def preprocess_documents(directory_path):
-    loader = DirectoryLoader(directory_path)
-    documents = loader.load()
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    return text_splitter.split_documents(documents)
+    try:
+        loader = DirectoryLoader(directory_path)
+        documents = loader.load()
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        return text_splitter.split_documents(documents)
+    except Exception as e:
+        st.error(f"Erro ao carregar documentos: {str(e)}")
+        return []
 
 def preencher_documento(tipo_documento, retrieval_chain_config):
     if tipo_documento not in templates:
@@ -62,7 +66,7 @@ def preencher_documento(tipo_documento, retrieval_chain_config):
     template = templates[tipo_documento]
 
     for campo in template:
-        question = f"Por favor, Me ajude a definir o/a {campo} com os dados que você tem acesso e com os dados da LLM."
+        question = f"Por favor, me ajude a definir o/a {campo} com os dados que você tem acesso e com os dados da LLM."
         response = retrieval_chain_config.invoke({"question": question})
         template[campo] = response['answer']
 
@@ -117,33 +121,36 @@ if uploaded_files:
 
         # Carregar e processar documentos
         documents = preprocess_documents(temp_dir)
-        st.success("Documentos carregados e processados com sucesso!")
+        if documents:
+            st.success("Documentos carregados e processados com sucesso!")
 
-        # Configurar embeddings e Chroma
-        embedder = OpenAIEmbeddings()
-        db = Chroma.from_documents(documents, embedder)
+            # Configurar embeddings e Chroma
+            embedder = OpenAIEmbeddings()
+            db = Chroma.from_documents(documents, embedder)
 
-        # Configurar modelo de chat e memória
-        chat_model = ChatOpenAI(temperature=0.7, model_name="gpt-4")
-        memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+            # Configurar modelo de chat e memória
+            chat_model = ChatOpenAI(temperature=0.7, model_name="gpt-4")
+            memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
 
-        # Configurar cadeia de recuperação conversacional
-        retrieval_chain_config = ConversationalRetrievalChain.from_llm(
-            llm=chat_model,
-            chain_type="stuff",
-            retriever=db.as_retriever(),
-            memory=memory
-        )
+            # Configurar cadeia de recuperação conversacional
+            retrieval_chain_config = ConversationalRetrievalChain.from_llm(
+                llm=chat_model,
+                chain_type="stuff",
+                retriever=db.as_retriever(),
+                memory=memory
+            )
 
-        # Preencher e salvar documentos
-        fill_documents_sequence(retrieval_chain_config, temp_dir)
-        st.success("Documentos preenchidos e salvos com sucesso!")
+            # Preencher e salvar documentos
+            fill_documents_sequence(retrieval_chain_config, temp_dir)
+            st.success("Documentos preenchidos e salvos com sucesso!")
 
-        # Mostrar documentos preenchidos
-        for doc_type in ["DFD", "ETP", "TR"]:
-            with open(os.path.join(temp_dir, f"{doc_type}.txt"), "r") as file:
-                st.text(f"{doc_type}:\n" + file.read())
+            # Mostrar documentos preenchidos
+            for doc_type in ["DFD", "ETP", "TR"]:
+                with open(os.path.join(temp_dir, f"{doc_type}.txt"), "r") as file:
+                    st.text(f"{doc_type}:\n" + file.read())
 
-        # Atualizar Chroma DB
-        update_chroma_db(temp_dir, db)
-        st.success("Chroma DB atualizado com sucesso!")
+            # Atualizar Chroma DB
+            update_chroma_db(temp_dir, db)
+            st.success("Chroma DB atualizado com sucesso!")
+        else:
+            st.error("Nenhum documento foi processado devido a um erro.")
