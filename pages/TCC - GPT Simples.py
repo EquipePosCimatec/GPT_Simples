@@ -124,33 +124,36 @@ if uploaded_files:
         if documents:
             st.success("Documentos carregados e processados com sucesso!")
 
-            # Configurar embeddings e Chroma
-            embedder = OpenAIEmbeddings()
-            db = Chroma.from_documents(documents, embedder)
+            try:
+                # Configurar embeddings e Chroma
+                embedder = OpenAIEmbeddings()
+                db = Chroma.from_documents(documents, embedder)
 
-            # Configurar modelo de chat e memória
-            chat_model = ChatOpenAI(temperature=0.7, model_name="gpt-4")
-            memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+                # Configurar modelo de chat e memória
+                chat_model = ChatOpenAI(temperature=0.7, model_name="gpt-4")
+                memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
 
-            # Configurar cadeia de recuperação conversacional
-            retrieval_chain_config = ConversationalRetrievalChain.from_llm(
-                llm=chat_model,
-                chain_type="stuff",
-                retriever=db.as_retriever(),
-                memory=memory
-            )
+                # Configurar cadeia de recuperação conversacional
+                retrieval_chain_config = ConversationalRetrievalChain.from_llm(
+                    llm=chat_model,
+                    chain_type="stuff",
+                    retriever=db.as_retriever(),
+                    memory=memory
+                )
 
-            # Preencher e salvar documentos
-            fill_documents_sequence(retrieval_chain_config, temp_dir)
-            st.success("Documentos preenchidos e salvos com sucesso!")
+                # Preencher e salvar documentos
+                fill_documents_sequence(retrieval_chain_config, temp_dir)
+                st.success("Documentos preenchidos e salvos com sucesso
 
-            # Mostrar documentos preenchidos
-            for doc_type in ["DFD", "ETP", "TR"]:
-                with open(os.path.join(temp_dir, f"{doc_type}.txt"), "r") as file:
-                    st.text(f"{doc_type}:\n" + file.read())
+                # Mostrar documentos preenchidos
+                for doc_type in ["DFD", "ETP", "TR"]:
+                    with open(os.path.join(temp_dir, f"{doc_type}.txt"), "r") as file:
+                        st.text(f"{doc_type}:\n" + file.read())
 
-            # Atualizar Chroma DB
-            update_chroma_db(temp_dir, db)
-            st.success("Chroma DB atualizado com sucesso!")
+                # Atualizar Chroma DB
+                update_chroma_db(temp_dir, db)
+                st.success("Chroma DB atualizado com sucesso!")
+            except Exception as e:
+                st.error(f"Erro ao configurar ChromaDB ou preencher documentos: {str(e)}")
         else:
             st.error("Nenhum documento foi processado devido a um erro.")
