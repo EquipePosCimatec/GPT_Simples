@@ -8,5 +8,5 @@ python-docx
 fpdf
 unstructured
 unstructured[local-inference]
-chromadb
+chromadb==0.4.0
 pysqlite3-binary>=0.4.6
