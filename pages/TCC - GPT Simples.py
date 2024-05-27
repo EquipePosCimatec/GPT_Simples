@@ -12,6 +12,13 @@ from docx import Document
 import sys
 __import__('pysqlite3')
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+import chromadb.config
+
+try:
+    chromadb.config.load()
+except ImportError:
+    st.error("Erro ao carregar configurações do ChromaDB.")
+
 
 
 # Configuração inicial da API OpenAI
