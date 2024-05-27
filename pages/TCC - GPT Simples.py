@@ -1,106 +1,148 @@
 import streamlit as st
-import pandas as pd
-from fpdf import FPDF
-from datetime import datetime
-from openai import OpenAI
+import os
+import tempfile
+from langchain.document_loaders import TextLoader, DirectoryLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.vectorstores import Chroma
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
+from langchain_openai import ChatOpenAI
+from docx import Document
 
-# 1. Classe PDF personalizada com cabeçalho e rodapé
-class PDF(FPDF):
-    def header(self):
-        self.image('logo.png', 10, 8, 56)
-        self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, 'Histórico da Conversa', 0, 1, 'C')
+# Configuração inicial da API OpenAI
+chave = st.secrets["KEY"]
+os.environ["OPENAI_API_KEY"] = "chave"
 
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.cell(0, 10, f'Página {self.page_no()}', 0, 0, 'C')
+# Templates de documentos
+templates = {
+    "DFD": {
+        "1. OBJETO DA FUTURA CONTRATAÇÃO": "Indicação resumida do(s) bem, serviço ou obra a ser contratada",
+        "2. UNIDADE SOLICITANTE": "Informar a Unidade que demandou a contratação",
+        "3. UNIDADE GESTORA DO RECURSO (NOME E CÓDIGO):": "Informar a Unidade Gestora que suportará o custeio da despesa, indicando-a nominalmente e com o código orçamentário respectivo",
+        "4. ORIGEM DO RECURSO": "Escolha entre RECURSOS PRÓPRIOS / RECURSOS ORIUNDOS DE CONVÊNIO ESTADUAL / RECURSOS ORIUNDOS DE CONVÊNIO FEDERAL",
+        "5. PREVISÃO NO PLANO DE CONTRATAÇÃO ANUAL": "Informar SIM ou Não",
+        "6. RESPONSÁVEL PELO PREENCHIMENTO DESTE DOCUMENTO": "Informar a Matricula / Nome Completo / Unidade Admnistrativa",
+        "6. IDENTIFICAÇÃO DO SUPERIOR IMEDIATO": "Informar a Matricula / Nome Completo / Unidade Admnistrativa",
+        
+    },
+    "ETP": {
+        "1. DESCRIÇÃO DA NECESSIDADE DA CONTRATAÇÃO": "Este item destina-se a esclarecer especificamente o problema ou a carência que precisa ser solucionada (NECESSIDADE), priorizando o ponto de vista do bem-estar e interesse coletivo.",
+        "2. PREVISÃO DA CONTRATAÇÃO NO PLANO DE CONTRATAÇÕES ANUAL – PCA": "Demonstre o alinhamento entre a contratação e o planejamento do MPBA, bem como identificação da previsão no Plano de Contratação Anual (PCA), ou, se for o caso, justificando a ausência de previsão neste plano.",
+        "3. DESCRIÇÃO DOS REQUISITOS DA CONTRATAÇÃO": "Preencher o item OU apresentar JUSTIFICATIVA para a dispensa desta informação",
+        "4. ESTIMATIVAS DAS QUANTIDADES PARA A CONTRATAÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO",
+        "5. LEVANTAMENTO DE MERCADO": "Indicar as possíveis alternativas de contratação (tipos de solução da demanda) existentes no mercado, para atendimento da necessidade informada;Indicar a alternativa escolhida;Justificar técnica e economicamente a escolha do tipo de solução a contratar.",
+        "6. ESTIMATIVA DO VALOR DA CONTRATAÇÃO": "Informar a estimativa do valor total da contratação;Informar a estimativa dos valores unitários da contratação;Apresentar a memória de cálculo utilizada para a definição dos valores, e anexar ao processo SEI eventuais documentos que a embasaram.",
+        "7. DESCRIÇÃO DA SOLUÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO.",
+        "8. PARCELAMENTO OU NÃO DA SOLUÇÃO": "PREENCHIMENTO OBRIGATÓRIO",
+        "9. DESCRIÇÃO DA CONTRATAÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO",
+        "10. DESCRIÇÃO DA CONTRATAÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO",
+        "11. DESCRIÇÃO DA CONTRATAÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO",
+        "12. DESCRIÇÃO DA CONTRATAÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO",
+    },
+    "TR": {
+        "1. OBJETO": "Objeto da contratação",
+        "2. JUSTIFICATIVA": "Justificativa para a contratação",
+        
+    }
+}
 
-    def chapter_title(self, title):
-        self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, title, 0, 1, 'L')
+# Funções de Processamento de Documentos
 
-    def chapter_body(self, body):
-        body = body.encode('latin-1', 'replace').decode('latin-1')
-        self.set_font('Arial', '', 12)
-        self.multi_cell(0, 10, body)
-        self.ln()
+def preprocess_documents(directory_path):
+    loader = DirectoryLoader(directory_path)
+    documents = loader.load()
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    return text_splitter.split_documents(documents)
 
-# 2. Configuração da API do OpenAI
-chave = st.secrets["CHAVE_API"]
-client = OpenAI(api_key=chave)
+def preencher_documento(tipo_documento, retrieval_chain_config):
+    if tipo_documento not in templates:
+        raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
+    
+    template = templates[tipo_documento]
 
-st.title("Chatbot - Assistente Especializado")
+    for campo in template:
+        question = f"Por favor, Me ajude a definir o/a {campo} com os dados que você tem acesso e com os dados da LLM."
+        response = retrieval_chain_config.invoke({"question": question})
+        template[campo] = response['answer']
 
-# 3. Inicialização da variável de saída do PDF e do histórico do chat
-pdf_output = 'historico_conversa.pdf'
+    return template
 
-if "mensagens" not in st.session_state:
-    st.session_state.mensagens = []
+def fill_documents_sequence(retrieval_chain_config, save_dir):
+    sequencia_documentos = ["DFD", "ETP", "TR"]
+    for tipo_documento in sequencia_documentos:
+        documento_preenchido = preencher_documento(tipo_documento, retrieval_chain_config)
+        save_document_txt(tipo_documento, documento_preenchido, save_dir)
+        save_document_docx(tipo_documento, documento_preenchido, save_dir)
 
-# 4. Exibir histórico da conversa
-for mensagem in st.session_state.mensagens:
-    if mensagem["role"] == "user":
-        with st.expander("Você", expanded=True):
-            st.write(mensagem["content"])
-    else:
-        with st.expander("Assistente", expanded=True):
-            st.write(mensagem["content"])
+def save_document_txt(tipo_documento, conteudo, save_dir):
+    caminho_txt = os.path.join(save_dir, f"{tipo_documento}.txt")
+    with open(caminho_txt, 'w') as file:
+        for campo, resposta in conteudo.items():
+            file.write(f"{campo}: {resposta}\n")
 
-# 5. Input para inserir a pergunta do usuário
-prompt = st.text_input("Faça uma pergunta (ou deixe em branco para finalizar)")
+def save_document_docx(tipo_documento, conteudo, save_dir):
+    caminho_docx = os.path.join(save_dir, f"{tipo_documento}.docx")
+    doc = Document()
+    doc.add_heading(tipo_documento, 0)
 
-if prompt:
-    if prompt.strip() == "":
-        st.session_state.conversation_ended = True
-    else:
-        resposta = client.chat.completions.create(
-            model='gpt-3.5-turbo',
-            messages=st.session_state.mensagens + [{"role": "user", "content": prompt}]
-        ).choices[0].message.content
-        st.session_state.mensagens.append({"role": "user", "content": prompt})
-        st.session_state.mensagens.append({"role": "system", "content": resposta})
+    for campo, resposta in conteudo.items():
+        doc.add_heading(campo, level=1)
+        doc.add_paragraph(resposta)
 
-# 6. Botão para finalizar a conversa e gerar o PDF
-if st.session_state.mensagens and (st.button('Finalizar Conversa') or st.session_state.get("conversation_ended", False)):
-    df = pd.DataFrame(st.session_state.mensagens)
-    if 'content' in df:
-        df['timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        df['tokens'] = df['content'].apply(lambda x: len(x.split()))
-        total_tokens = df['tokens'].sum()
-        custo_por_token = 0.0001
-        custo_estimado = total_tokens * custo_por_token
-        df['custo_estimado'] = custo_estimado
+    doc.save(caminho_docx)
 
-        pdf = PDF()
-        pdf.add_page()
+def update_chroma_db(directory_path, db):
+    loader = DirectoryLoader(directory_path)
+    new_documents = loader.load()
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    new_docs = text_splitter.split_documents(new_documents)
+    db.add_documents(new_docs)
 
-        pdf.chapter_title('Informações da Conversa')
-        info_str = f"Dia e Horário: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-        info_str += f"Tokens Utilizados: {total_tokens}\n"
-        info_str += f"Custo Estimado: {custo_estimado}\n"
-        pdf.chapter_body(info_str)
+# Interface do Streamlit
 
-        pdf.chapter_title('Histórico do Diálogo')
-        for index, row in df.iterrows():
-            role = "P: " if row["role"] == "user" else "R: "
-            text = role + row['content']
-            pdf.chapter_body(text)
+st.title("Gerador de Documentos com IA")
 
-        pdf.output(pdf_output)
+uploaded_files = st.file_uploader("Carregar Documentos", accept_multiple_files=True, type=["txt", "docx", "pdf"])
 
-        st.session_state.reset = True
+if uploaded_files:
+    with st.spinner("Processando documentos..."):
+        # Criar diretório temporário para armazenar arquivos
+        temp_dir = tempfile.mkdtemp()
 
-# 7. Exibir botões de download do PDF e de reiniciar a conversa
-if "reset" in st.session_state and st.session_state.reset:
-    with open(pdf_output, "rb") as file:
-        st.download_button(
-            label="Download PDF",
-            data=file,
-            file_name="historico_conversa.pdf",
-            mime="application/octet-stream"
+        for uploaded_file in uploaded_files:
+            temp_file_path = os.path.join(temp_dir, uploaded_file.name)
+            with open(temp_file_path, "wb") as temp_file:
+                temp_file.write(uploaded_file.read())
+
+        # Carregar e processar documentos
+        documents = preprocess_documents(temp_dir)
+        st.success("Documentos carregados e processados com sucesso!")
+
+        # Configurar embeddings e Chroma
+        embedder = OpenAIEmbeddings()
+        db = Chroma.from_documents(documents, embedder)
+
+        # Configurar modelo de chat e memória
+        chat_model = ChatOpenAI(temperature=0.7, model_name="gpt-4")
+        memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+
+        # Configurar cadeia de recuperação conversacional
+        retrieval_chain_config = ConversationalRetrievalChain.from_llm(
+            llm=chat_model,
+            chain_type="stuff",
+            retriever=db.as_retriever(),
+            memory=memory
         )
 
-    if st.button("Zerar Conversa"):
-        st.session_state.clear()
-        st.experimental_rerun()
+        # Preencher e salvar documentos
+        fill_documents_sequence(retrieval_chain_config, temp_dir)
+        st.success("Documentos preenchidos e salvos com sucesso!")
+
+        # Mostrar documentos preenchidos
+        for doc_type in ["DFD", "ETP", "TR"]:
+            with open(os.path.join(temp_dir, f"{doc_type}.txt"), "r") as file:
+                st.text(f"{doc_type}:\n" + file.read())
+
+        # Atualizar Chroma DB
+        update_chroma_db(temp_dir, db)
+        st.success("Chroma DB atualizado com sucesso!")
