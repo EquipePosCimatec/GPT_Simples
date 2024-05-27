@@ -171,3 +171,9 @@ if uploaded_files:
                 st.success("Chroma DB atualizado com sucesso!")
             except Exception as e:
                 st.error(f"Erro ao configurar ChromaDB ou preencher documentos: {str(e)}")
+                # Carregar as configurações do ChromaDB
+            try:
+                import chromadb
+            except ImportError:
+                st.error("ChromaDB não está instalado. Certifique-se de que está instalado corretamente.")
+                st.stop()  # Parar a execução do script em caso de erro
