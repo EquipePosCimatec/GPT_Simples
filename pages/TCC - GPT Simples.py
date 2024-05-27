@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import tempfile
 from langchain.document_loaders import DirectoryLoader
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_community.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
