@@ -7,7 +7,6 @@ langchain
 tiktoken
 faiss-gpu
 langchain_experimental
--U langchain-openai
 unstructured
 langchain-chroma
 python-docx
