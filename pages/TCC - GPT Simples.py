@@ -57,7 +57,7 @@ def preprocess_documents(directory_path):
     try:
         loader = DirectoryLoader(directory_path)
         documents = loader.load()
-        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
         return text_splitter.split_documents(documents)
     except Exception as e:
         st.error(f"Erro ao carregar documentos: {str(e)}")
@@ -103,7 +103,7 @@ def save_document_docx(tipo_documento, conteudo, save_dir):
 def update_chroma_db(directory_path, db):
     loader = DirectoryLoader(directory_path)
     new_documents = loader.load()
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
     new_docs = text_splitter.split_documents(new_documents)
     db.add_documents(new_docs)
 
