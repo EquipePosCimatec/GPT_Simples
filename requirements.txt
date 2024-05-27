@@ -9,4 +9,4 @@ fpdf
 unstructured
 unstructured[local-inference]
 chromadb
-sqlite>=3.35.0
+sqlite>=3.34.0,<3.35.0
