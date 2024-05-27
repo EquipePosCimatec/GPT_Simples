@@ -8,3 +8,4 @@ python-docx
 fpdf
 unstructured
 unstructured[local-inference]
+chromadb
