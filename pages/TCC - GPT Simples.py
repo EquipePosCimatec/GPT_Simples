@@ -143,7 +143,7 @@ if uploaded_files:
 
                 # Preencher e salvar documentos
                 fill_documents_sequence(retrieval_chain_config, temp_dir)
-                st.success("Documentos preenchidos e salvos com sucesso
+                st.success("Documentos preenchidos e salvos com sucesso!")
 
                 # Mostrar documentos preenchidos
                 for doc_type in ["DFD", "ETP", "TR"]:
