@@ -57,7 +57,7 @@ def preprocess_documents(directory_path):
     try:
         loader = DirectoryLoader(directory_path)
         documents = loader.load()
-        text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
+        text_splitter = CharacterTextSplitter(chunk_size=1500)
         return text_splitter.split_documents(documents)
     except Exception as e:
         st.error(f"Erro ao carregar documentos: {str(e)}")
@@ -86,6 +86,8 @@ def fill_documents_sequence(retrieval_chain_config, save_dir):
 def save_document_txt(tipo_documento, conteudo, save_dir):
     caminho_txt = os.path.join(save_dir, f"{tipo_documento}.txt")
     with open(caminho_txt, 'w') as file:
+        caminho_txt = os.path.join(save_dir, f"{tipo_documento}.txt")
+    with open(caminho_txt, 'w') as file:
         for campo, resposta in conteudo.items():
             file.write(f"{campo}: {resposta}\n")
 
@@ -103,7 +105,7 @@ def save_document_docx(tipo_documento, conteudo, save_dir):
 def update_chroma_db(directory_path, db):
     loader = DirectoryLoader(directory_path)
     new_documents = loader.load()
-    text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
+    text_splitter = CharacterTextSplitter(chunk_size=1500)
     new_docs = text_splitter.split_documents(new_documents)
     db.add_documents(new_docs)
 
@@ -161,3 +163,4 @@ if uploaded_files:
                 st.error(f"Erro ao configurar ChromaDB ou preencher documentos: {str(e)}")
         else:
             st.error("Nenhum documento foi processado devido a um erro.")
+
