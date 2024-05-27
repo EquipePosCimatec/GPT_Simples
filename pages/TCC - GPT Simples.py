@@ -9,7 +9,10 @@ from langchain.memory import ConversationBufferMemory
 from langchain_openai import ChatOpenAI
 from langchain.text_splitter import CharacterTextSplitter
 from docx import Document
-import yaml
+import sys
+__import__('pysqlite3')
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 
 # Configuração inicial da API OpenAI
 chave = st.secrets["KEY"]
@@ -130,21 +133,6 @@ if uploaded_files:
                 embedder = OpenAIEmbeddings()
                 db = Chroma.from_documents(documents, embedder)
 
-                # Carregar as configurações do ChromaDB
-                try:
-                    with open("path/to/your/config.yaml", "r") as config_file:
-                        chroma_config = yaml.safe_load(config_file)
-                except FileNotFoundError:
-                    st.error("Arquivo de configuração do ChromaDB não encontrado.")
-                    st.stop()  # Parar a execução do script em caso de erro
-                except Exception as e:
-                    st.error(f"Erro ao carregar configurações do ChromaDB: {e}")
-                    st.stop()  # Parar a execução do script em caso de erro
-
-                # Usar as configurações carregadas
-                # Por exemplo, se suas configurações incluírem uma chave 'database_url':
-                # database_url = chroma_config['database_url']
-
                 # Configurar modelo de chat e memória
                 chat_model = ChatOpenAI(temperature=0.7, model_name="gpt-4")
                 memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
@@ -171,9 +159,5 @@ if uploaded_files:
                 st.success("Chroma DB atualizado com sucesso!")
             except Exception as e:
                 st.error(f"Erro ao configurar ChromaDB ou preencher documentos: {str(e)}")
-                # Carregar as configurações do ChromaDB
-            try:
-                import chromadb
-            except ImportError:
-                st.error("ChromaDB não está instalado. Certifique-se de que está instalado corretamente.")
-                st.stop()  # Parar a execução do script em caso de erro
+        else:
+            st.error("Nenhum documento foi processado devido a um erro.")
