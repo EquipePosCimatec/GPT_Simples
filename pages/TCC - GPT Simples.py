@@ -9,6 +9,10 @@ from langchain.memory import ConversationBufferMemory
 from langchain_openai import ChatOpenAI
 from langchain.text_splitter import CharacterTextSplitter
 from docx import Document
+import sys
+__import__('pysqlite3')
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 
 # Configuração inicial da API OpenAI
 chave = st.secrets["KEY"]
@@ -82,13 +86,14 @@ def fill_documents_sequence(retrieval_chain_config, save_dir):
 def save_document_txt(tipo_documento, conteudo, save_dir):
     caminho_txt = os.path.join(save_dir, f"{tipo_documento}.txt")
     with open(caminho_txt, 'w') as file:
+        caminho_txt = os.path.join(save_dir, f"{tipo_documento}.txt")
+    with open(caminho_txt, 'w') as file:
         for campo, resposta in conteudo.items():
             file.write(f"{campo}: {resposta}\n")
 
 def save_document_docx(tipo_documento, conteudo, save_dir):
     caminho_docx = os.path.join(save_dir, f"{tipo_documento}.docx")
     doc = Document()
-
     doc.add_heading(tipo_documento, 0)
 
     for campo, resposta in conteudo.items():
@@ -103,22 +108,6 @@ def update_chroma_db(directory_path, db):
     text_splitter = CharacterTextSplitter(chunk_size=1500)
     new_docs = text_splitter.split_documents(new_documents)
     db.add_documents(new_docs)
-
-def load_chroma_db(collection_name: str):
-    parent_splitter = CharacterTextSplitter(chunk_size=2000)
-    child_splitter = CharacterTextSplitter(chunk_size=400)
-
-    embedder = OpenAIEmbeddings()
-    vectorstore = Chroma(collection_name=collection_name, embedding_function=embedder, persist_directory="storage/deploy/chroma-db")
-    store = InMemoryStore()
-
-    retriever = ParentDocumentRetriever(
-        vectorstore=vectorstore,
-        docstore=store,
-        child_splitter=child_splitter,
-        parent_splitter=parent_splitter
-    )
-    return retriever
 
 # Interface do Streamlit
 
@@ -142,13 +131,6 @@ if uploaded_files:
             st.success("Documentos carregados e processados com sucesso!")
 
             try:
-                # Carregar ou criar Chroma DB
-                db = load_chroma_db("full_docs")
-
-                # Adicionar novos documentos ao Chroma DB
-                update_chroma_db(temp_dir, db)
-                st.success("Chroma DB atualizado com sucesso!")
-
                 # Configurar embeddings e Chroma
                 embedder = OpenAIEmbeddings()
                 db = Chroma.from_documents(documents, embedder)
@@ -173,9 +155,11 @@ if uploaded_files:
                 for doc_type in ["DFD", "ETP", "TR"]:
                     with open(os.path.join(temp_dir, f"{doc_type}.txt"), "r") as file:
                         st.text(f"{doc_type}:\n" + file.read())
+
+                # Atualizar Chroma DB
+                update_chroma_db(temp_dir, db)
+                st.success("Chroma DB atualizado com sucesso!")
             except Exception as e:
                 st.error(f"Erro ao configurar ChromaDB ou preencher documentos: {str(e)}")
         else:
             st.error("Nenhum documento foi processado devido a um erro.")
-
-   
