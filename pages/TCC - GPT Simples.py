@@ -15,9 +15,12 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import chromadb
 
 try:
-    chromadb.load_config()
-except AttributeError:
-    st.error("Erro ao carregar configurações do ChromaDB.")
+    chromadb.load_config("path/to/your/config.yaml")
+except FileNotFoundError:
+    st.error("Arquivo de configuração do ChromaDB não encontrado.")
+except Exception as e:
+    st.error(f"Erro ao carregar configurações do ChromaDB: {e}")
+
 
 
 
