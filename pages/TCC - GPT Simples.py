@@ -10,8 +10,15 @@ from langchain_openai import ChatOpenAI
 from langchain.text_splitter import CharacterTextSplitter
 from docx import Document
 import sys
+
+# Importe e manipule o módulo sqlite3
 __import__('pysqlite3')
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+import pysqlite3
+sys.modules['sqlite3'] = sys.modules["pysqlite3"]
+
+# Agora você pode importar o chromadb
+import chromadb
+
 
 
 # Configuração inicial da API OpenAI
