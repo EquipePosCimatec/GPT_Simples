@@ -9,6 +9,10 @@ from langchain.memory import ConversationBufferMemory
 from langchain_openai import ChatOpenAI
 from langchain.text_splitter import CharacterTextSplitter
 from docx import Document
+import sys
+__import__('pysqlite3')
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 
 # Configuração inicial da API OpenAI
 chave = st.secrets["KEY"]
