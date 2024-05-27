@@ -7,11 +7,12 @@ from langchain.vectorstores import Chroma
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
 from langchain_openai import ChatOpenAI
+from langchain.text_splitter import CharacterTextSplitter
 from docx import Document
 
 # Configuração inicial da API OpenAI
 chave = st.secrets["KEY"]
-os.environ["OPENAI_API_KEY"] = "chave"
+os.environ["OPENAI_API_KEY"] = chave
 
 # Templates de documentos
 templates = {
