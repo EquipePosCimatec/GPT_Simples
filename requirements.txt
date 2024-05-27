@@ -1,12 +1,5 @@
 streamlit
-pandas
-openai
-FPDF
-fpdf2
 langchain
-tiktoken
-faiss-gpu
-langchain_experimental
-unstructured
-langchain-chroma
+openai
 python-docx
+fpdf
