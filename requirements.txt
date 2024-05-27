@@ -9,4 +9,4 @@ fpdf
 unstructured
 unstructured[local-inference]
 chromadb
-sqlite
+sqlite3
