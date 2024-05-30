@@ -7,3 +7,4 @@ langchain_experimental
 unstructured
 langchain-chroma
 python-docx
+fpdf2
