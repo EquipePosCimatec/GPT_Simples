@@ -6,6 +6,7 @@ from openai import OpenAI
 from PIL import Image
 import docx
 import docx2txt
+import fitz  # PyMuPDF
 
 # Configuração inicial da API OpenAI
 chave = st.secrets["KEY"]
@@ -17,6 +18,17 @@ def extract_text_from_docx(file):
         return text
     except Exception as e:
         print(f"Error extracting text from {file}: {e}")
+        return None
+
+def extract_text_from_pdf(file):
+    try:
+        text = ""
+        with fitz.open(stream=file.read(), filetype="pdf") as doc:
+            for page in doc:
+                text += page.get_text()
+        return text
+    except Exception as e:
+        print(f"Error extracting text from PDF {file.name}: {e}")
         return None
 
 def retrieve_information(documents, query):
@@ -71,7 +83,11 @@ if st.button('Gerar Resposta'):
 
         # Processamento dos documentos de conhecimento adicional
         for file in knowledge_files:
-            text = extract_text_from_docx(file)
+            if file.type == "application/pdf":
+                text = extract_text_from_pdf(file)
+            else:
+                text = extract_text_from_docx(file)
+            
             if text is not None:
                 knowledge_content.append(text)
             else:
