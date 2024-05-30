@@ -1,15 +1,9 @@
-streamlit
-openai
 langchain
-langchain-openai
-langchain-chroma
-langchain-experimental
-python-docx
-fpdf
+openai
+tiktoken
+faiss-gpu
+langchain_experimental
+-U langchain-openai
 unstructured
-unstructured[local-inference]
-chromadb
-pysqlite3-binary>=0.4.6
-pyngrok
-docx2txt
-PyMuPDF
+langchain-chroma
+python-docx
