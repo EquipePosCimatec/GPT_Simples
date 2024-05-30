@@ -9,7 +9,7 @@ import docx2txt
 
 # Configuração inicial da API OpenAI
 chave = st.secrets["KEY"]
-client = OpenAI(api_key = chave)
+client = OpenAI(api_key=chave)
 
 def extract_text_from_docx(file):
     try:
@@ -30,7 +30,7 @@ def generate_text_with_context(context, prompt):
         response = client.chat.completions.create(
             model="gpt-4-turbo-preview",
             messages=[
-                {"role": "system", "content": "Você será um especialista em criar artefatos de licitação Documento de Formalização da Demanda (DFD),Estudo Técnico Preliminar (ETP) e Termo de Referência (TR) "},
+                {"role": "system", "content": "Você será um especialista em criar artefatos de licitação Documento de Formalização da Demanda (DFD), Estudo Técnico Preliminar (ETP) e Termo de Referência (TR)"},
                 {"role": "user", "content": full_prompt}
             ]
         )
@@ -55,8 +55,6 @@ knowledge_files = st.file_uploader("Escolha documentos de conhecimento (arquivos
 st.header("Digite seu prompt")
 user_query = st.text_input("Digite sua consulta")
 
-import streamlit as st
-
 if st.button('Gerar Resposta'):
     if model_files and user_query:
         errors = []
@@ -66,28 +64,31 @@ if st.button('Gerar Resposta'):
         # Processamento dos modelos de documentos
         for file in model_files:
             text = extract_text_from_docx(file)
-            model_content.append(text)  # sempre adicione o texto, mesmo que seja vazio
-            if text is None:
+            if text is not None:
+                model_content.append(text)
+            else:
                 errors.append(f"Erro ao extrair texto do arquivo {file.name}")
 
         # Processamento dos documentos de conhecimento adicional
         for file in knowledge_files:
             text = extract_text_from_docx(file)
-            knowledge_content.append(text)  # sempre adicione o texto, mesmo que seja vazio
-            if text is None:
+            if text is not None:
+                knowledge_content.append(text)
+            else:
                 errors.append(f"Erro ao extrair texto do arquivo {file.name}")
 
         # Combinação de conteúdos dos modelos e conhecimento adicional
         combined_content = "\n".join(model_content + knowledge_content)
 
         # Geração de texto com o prompt enriquecido
-        answer, error = generate_text_with_context(combined_content, user_query)
-        if error:
-            errors.append(error)
+        answer = generate_text_with_context(combined_content, user_query)
+        
+        if isinstance(answer, str):
+            st.write("Resposta:", answer)
+        else:
+            errors.append("Erro ao gerar a resposta")
 
         if errors:
             st.error("Erros encontrados:\n" + "\n".join(errors))
-        else:
-            st.write("Resposta:", answer)
     else:
         st.error("Por favor, carregue pelo menos um modelo de documento e digite uma consulta.")
