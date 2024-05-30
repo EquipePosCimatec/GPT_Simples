@@ -12,3 +12,4 @@ chromadb
 pysqlite3-binary>=0.4.6
 pyngrok
 docx2txt
+PyMuPDF
