@@ -5,3 +5,4 @@ langchain_experimental
 unstructured
 langchain-chroma
 python-docx
+docx2txt
