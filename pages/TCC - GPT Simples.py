@@ -1,6 +1,6 @@
 import streamlit as st
 from io import StringIO, BytesIO
-from langchain.document_loaders import TextLoader
+from langchain.schema import Document as LangDocument
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
@@ -44,15 +44,12 @@ if uploaded_files:
             documents.append(content)
     
     if documents:
-        # Converter documentos carregados para o formato langchain e dividir em chunks
-        text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
-        docs = []
+        # Converter conteúdo dos arquivos para objetos LangDocument
+        lang_docs = [LangDocument(page_content=doc) for doc in documents]
 
-        for content in documents:
-            loader = TextLoader(content)
-            doc = loader.load()
-            chunks = text_splitter.split_documents(doc)
-            docs.extend(chunks)
+        # Dividir documentos em chunks
+        text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
+        docs = text_splitter.split_documents(lang_docs)
 
         # Criar embedder com o modelo da OpenAI
         embedder = OpenAIEmbeddings(model="text-embedding-3-large")
