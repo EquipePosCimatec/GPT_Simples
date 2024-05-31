@@ -13,7 +13,7 @@ import re
 
 # Configuração inicial da API OpenAI
 chave = st.secrets["KEY"]
-client = OpenAI(api_key=chave)
+client = OpenAI(api_key = chave)
 
 # Layout e lógica do aplicativo Streamlit
 st.title("Gerador de Documentos para o MPBA")
