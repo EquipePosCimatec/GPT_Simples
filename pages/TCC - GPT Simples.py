@@ -12,8 +12,8 @@ import os
 import re
 
 # Configuração inicial da API OpenAI
-chave = st.secrets["KEY"]
-client = OpenAI(api_key = chave)
+chave = st.secrets["KEY"]  # Assumindo que você configurou a chave nas variáveis de ambiente do Streamlit
+os.environ["OPENAI_API_KEY"] = chave
 
 # Layout e lógica do aplicativo Streamlit
 st.title("Gerador de Documentos para o MPBA")
