@@ -2,7 +2,6 @@ import streamlit as st
 from io import StringIO, BytesIO
 from langchain.schema import Document as LangDocument
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
@@ -12,8 +11,14 @@ import docx2txt
 import os
 import re
 
+# Importar pysqlite3 antes de chromadb
+import pysqlite3
+
+# Importar chromadb após pysqlite3
+from langchain.vectorstores import Chroma
+
 # Configuração inicial da API OpenAI
-chave = st.secrets["KEY"]  # Assumindo que você configurou a chave nas variáveis de ambiente do Streamlit
+chave = st.secrets["OPENAI_API_KEY"]  # Assumindo que você configurou a chave nas variáveis de ambiente do Streamlit
 os.environ["OPENAI_API_KEY"] = chave
 
 # Layout e lógica do aplicativo Streamlit
