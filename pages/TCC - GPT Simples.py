@@ -1,181 +1,172 @@
 import streamlit as st
-from io import StringIO, BytesIO
-from langchain.schema import Document as LangDocument
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import Chroma
-from langchain.embeddings import OpenAIEmbeddings
+import os
+import tempfile
+from langchain_community.document_loaders import DirectoryLoader
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
+from langchain.text_splitter import CharacterTextSplitter
 from docx import Document
-import docx2txt
-import os
-import re
+import sys
+
+# Importe e manipule o módulo sqlite3
+__import__('pysqlite3')
+import pysqlite3
+sys.modules['sqlite3'] = sys.modules["pysqlite3"]
+
+# Agora você pode importar o chromadb
+import chromadb
+
+
 
 # Configuração inicial da API OpenAI
-chave = st.secrets["KEY"]  # Assumindo que você configurou a chave nas variáveis de ambiente do Streamlit
+chave = st.secrets["KEY"]
 os.environ["OPENAI_API_KEY"] = chave
 
-# Layout e lógica do aplicativo Streamlit
-st.title("Gerador de Documentos para o MPBA")
+# Templates de documentos
+templates = {
+    "DFD": {
+        "1. OBJETO DA FUTURA CONTRATAÇÃO": "Indicação resumida do(s) bem, serviço ou obra a ser contratada",
+        "2. UNIDADE SOLICITANTE": "Informar a Unidade que demandou a contratação",
+        "3. UNIDADE GESTORA DO RECURSO (NOME E CÓDIGO):": "Informar a Unidade Gestora que suportará o custeio da despesa, indicando-a nominalmente e com o código orçamentário respectivo",
+        "4. ORIGEM DO RECURSO": "Escolha entre RECURSOS PRÓPRIOS / RECURSOS ORIUNDOS DE CONVÊNIO ESTADUAL / RECURSOS ORIUNDOS DE CONVÊNIO FEDERAL",
+        "5. PREVISÃO NO PLANO DE CONTRATAÇÃO ANUAL": "Informar SIM ou Não",
+        "6. RESPONSÁVEL PELO PREENCHIMENTO DESTE DOCUMENTO": "Informar a Matricula / Nome Completo / Unidade Admnistrativa",
+        "6. IDENTIFICAÇÃO DO SUPERIOR IMEDIATO": "Informar a Matricula / Nome Completo / Unidade Admnistrativa",
+        
+    },
+    "ETP": {
+        "1. DESCRIÇÃO DA NECESSIDADE DA CONTRATAÇÃO": "Este item destina-se a esclarecer especificamente o problema ou a carência que precisa ser solucionada (NECESSIDADE), priorizando o ponto de vista do bem-estar e interesse coletivo.",
+        "2. PREVISÃO DA CONTRATAÇÃO NO PLANO DE CONTRATAÇÕES ANUAL – PCA": "Demonstre o alinhamento entre a contratação e o planejamento do MPBA, bem como identificação da previsão no Plano de Contratação Anual (PCA), ou, se for o caso, justificando a ausência de previsão neste plano.",
+        "3. DESCRIÇÃO DOS REQUISITOS DA CONTRATAÇÃO": "Preencher o item OU apresentar JUSTIFICATIVA para a dispensa desta informação",
+        "4. ESTIMATIVAS DAS QUANTIDADES PARA A CONTRATAÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO",
+        "5. LEVANTAMENTO DE MERCADO": "Indicar as possíveis alternativas de contratação (tipos de solução da demanda) existentes no mercado, para atendimento da necessidade informada;Indicar a alternativa escolhida;Justificar técnica e economicamente a escolha do tipo de solução a contratar.",
+        "6. ESTIMATIVA DO VALOR DA CONTRATAÇÃO": "Informar a estimativa do valor total da contratação;Informar a estimativa dos valores unitários da contratação;Apresentar a memória de cálculo utilizada para a definição dos valores, e anexar ao processo SEI eventuais documentos que a embasaram.",
+        "7. DESCRIÇÃO DA SOLUÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO.",
+        "8. PARCELAMENTO OU NÃO DA SOLUÇÃO": "PREENCHIMENTO OBRIGATÓRIO",
+        "9. DESCRIÇÃO DA CONTRATAÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO",
+        "10. DESCRIÇÃO DA CONTRATAÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO",
+        "11. DESCRIÇÃO DA CONTRATAÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO",
+        "12. DESCRIÇÃO DA CONTRATAÇÃO": "PREENCHER O ITEM OU APRESENTAR JUSTIFICATIVA PARA A DISPENSA DESTA INFORMAÇÃO",
+    },
+    "TR": {
+        "1. OBJETO": "Objeto da contratação",
+        "2. JUSTIFICATIVA": "Justificativa para a contratação",
+        
+    }
+}
 
-# Componente de upload de arquivos no Streamlit
-uploaded_files = st.file_uploader("Carregue os arquivos", accept_multiple_files=True)
+# Funções de Processamento de Documentos
 
-def read_file(file):
-    if file.name.endswith('.docx'):
-        return docx2txt.process(BytesIO(file.read()))
-    else:
-        try:
-            return file.getvalue().decode("utf-8")
-        except UnicodeDecodeError:
-            try:
-                return file.getvalue().decode("latin-1")
-            except UnicodeDecodeError:
-                st.error(f"Não foi possível ler o arquivo {file.name}. Formato não suportado.")
-                return None
+def preprocess_documents(directory_path):
+    try:
+        loader = DirectoryLoader(directory_path)
+        documents = loader.load()
+        text_splitter = CharacterTextSplitter(chunk_size=1500)
+        return text_splitter.split_documents(documents)
+    except Exception as e:
+        st.error(f"Erro ao carregar documentos: {str(e)}")
+        return []
+
+def preencher_documento(tipo_documento, retrieval_chain_config):
+    if tipo_documento not in templates:
+        raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
+    
+    template = templates[tipo_documento]
+
+    for campo in template:
+        question = f"Por favor, me ajude a definir o/a {campo} com os dados que você tem acesso e com os dados da LLM."
+        response = retrieval_chain_config.invoke({"question": question})
+        template[campo] = response['answer']
+
+    return template
+
+def fill_documents_sequence(retrieval_chain_config, save_dir):
+    sequencia_documentos = ["DFD", "ETP", "TR"]
+    for tipo_documento in sequencia_documentos:
+        documento_preenchido = preencher_documento(tipo_documento, retrieval_chain_config)
+        save_document_txt(tipo_documento, documento_preenchido, save_dir)
+        save_document_docx(tipo_documento, documento_preenchido, save_dir)
+
+def save_document_txt(tipo_documento, conteudo, save_dir):
+    caminho_txt = os.path.join(save_dir, f"{tipo_documento}.txt")
+    with open(caminho_txt, 'w') as file:
+        caminho_txt = os.path.join(save_dir, f"{tipo_documento}.txt")
+    with open(caminho_txt, 'w') as file:
+        for campo, resposta in conteudo.items():
+            file.write(f"{campo}: {resposta}\n")
+
+def save_document_docx(tipo_documento, conteudo, save_dir):
+    caminho_docx = os.path.join(save_dir, f"{tipo_documento}.docx")
+    doc = Document()
+    doc.add_heading(tipo_documento, 0)
+
+    for campo, resposta in conteudo.items():
+        doc.add_heading(campo, level=1)
+        doc.add_paragraph(resposta)
+
+    doc.save(caminho_docx)
+
+def update_chroma_db(directory_path, db):
+    loader = DirectoryLoader(directory_path)
+    new_documents = loader.load()
+    text_splitter = CharacterTextSplitter(chunk_size=1500)
+    new_docs = text_splitter.split_documents(new_documents)
+    db.add_documents(new_docs)
+
+# Interface do Streamlit
+
+st.title("Gerador de Documentos com IA")
+
+uploaded_files = st.file_uploader("Carregar Documentos", accept_multiple_files=True, type=["txt", "docx", "pdf"])
 
 if uploaded_files:
-    documents = []
-    # Ler o conteúdo dos arquivos carregados
-    for uploaded_file in uploaded_files:
-        content = read_file(uploaded_file)
-        if content:
-            documents.append(content)
-    
-    if documents:
-        # Converter conteúdo dos arquivos para objetos LangDocument
-        lang_docs = [LangDocument(page_content=doc) for doc in documents]
+    with st.spinner("Processando documentos..."):
+        # Criar diretório temporário para armazenar arquivos
+        temp_dir = tempfile.mkdtemp()
 
-        # Dividir documentos em chunks
-        text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
-        docs = text_splitter.split_documents(lang_docs)
+        for uploaded_file in uploaded_files:
+            temp_file_path = os.path.join(temp_dir, uploaded_file.name)
+            with open(temp_file_path, "wb") as temp_file:
+                temp_file.write(uploaded_file.read())
 
-        # Criar embedder com o modelo da OpenAI
-        embedder = OpenAIEmbeddings(model="text-embedding-3-large")
+        # Carregar e processar documentos
+        documents = preprocess_documents(temp_dir)
+        if documents:
+            st.success("Documentos carregados e processados com sucesso!")
 
-        try:
-            # Criar ChromaDB com documentos e embedder
-            db = Chroma.from_documents(docs, embedder, collection_name="document_collection")
-            
-            # Configurar o modelo de chat com GPT-4 e memória de conversação
-            chat_model = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo")
-            memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+            try:
+                # Configurar embeddings e Chroma
+                embedder = OpenAIEmbeddings()
+                db = Chroma.from_documents(documents, embedder)
 
-            # Configurar a cadeia de recuperação conversacional
-            retrieval_chain_config = ConversationalRetrievalChain.from_llm(
-                llm=chat_model,
-                chain_type="stuff",
-                retriever=db.as_retriever(return_source_documents=True),
-                memory=memory
-            )
+                # Configurar modelo de chat e memória
+                chat_model = ChatOpenAI(temperature=0.7, model_name="gpt-4")
+                memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
 
-            # Definir templates de documentos
-            templates = {
-                "ETP": {
-                    "1. DESCRIÇÃO DA NECESSIDADE DA CONTRATAÇÃO": "Este item visa clarificar o problema ou a deficiência...",
-                    "2. PREVISÃO DA CONTRATAÇÃO NO PLANO DE CONTRATAÇÕES ANUAL – PCA": "Indique a inclusão desta contratação...",
-                    "3. DESCRIÇÃO DOS REQUISITOS DA CONTRATAÇÃO": "Especifique todos os requisitos técnicos e de desempenho necessários...",
-                    "4. ESTIMATIVAS DAS QUANTIDADES PARA A CONTRATAÇÃO": "Baseando-se em consumo real e projeções futuras...",
-                    "5. LEVANTAMENTO DE MERCADO": "Realize uma pesquisa comparativa de mercado...",
-                    "6. ESTIMATIVA DO VALOR DA CONTRATAÇÃO": "Informe a estimativa do valor total e unitário da contratação...",
-                    "7. DESCRIÇÃO DA SOLUÇÃO": "Descreva a solução escolhida de forma abrangente...",
-                    "8. PARCELAMENTO OU NÃO DA SOLUÇÃO": "Discuta se a solução será parcelada ou adquirida integralmente...",
-                    "9. RESULTADOS PRETENDIDOS COM A CONTRATAÇÃO": "Defina os benefícios diretos e indiretos esperados...",
-                    "10. PROVIDÊNCIAS A SEREM ADOTADAS PELA ADMINISTRAÇÃO PREVIAMENTE À CONTRATAÇÃO": "Identifique quaisquer ações necessárias...",
-                    "11. CONTRATAÇÕES CORRELATAS E/OU INTERDEPENDENTES": "Liste quaisquer contratações relacionadas...",
-                    "12. POSSÍVEIS IMPACTOS AMBIENTAIS": "Analise os impactos ambientais da contratação...",
-                    "13. POSICIONAMENTO CONCLUSIVO SOBRE A CONTRATAÇÃO": "Forneça uma declaração final sobre a viabilidade..."
-                },
-                "TR": {
-                    "1. OBJETO": "1 Aquisição de [inserir o objeto]...",
-                    "1.1.2 PARCELAMENTO DA CONTRATAÇÃO": "REALIZADA EM ÚNICO ITEM...",
-                    "1.1.3 INDICAÇÃO DE MARCAS OU MODELOS": "NÃO SE APLICA / EXCLUSIVIDADE DE MARCA/MODELO...",
-                    "1.1.4 A VEDAÇÃO DE CONTRATAÇÃO DE MARCA OU PRODUTO": "NÃO SE APLICA / SE APLICA",
-                    "1.2 NATUREZA DO OBJETO": "NATUREZA COMUM / NATUREZA ESPECIAL",
-                    "1.3 ENQUADRAMENTO, VIGÊNCIA E FORMALIZAÇÃO DA CONTRATAÇÃO": "NÃO CONTINUADO / CONTINUADO",
-                    "1.3.2 PRAZO DE VIGÊNCIA": "",
-                    "1.3.3 FORMALIZAÇÃO DA CONTRATAÇÃO": "HAVERÁ SOMENTE EMISSÃO DE INSTRUMENTO SUBSTITUTIVO...",
-                    "2. FUNDAMENTAÇÃO DA CONTRATAÇÃO": "",
-                    "3. DESCRIÇÃO DA SOLUÇÃO": "",
-                    "4. REQUISITOS DA CONTRATAÇÃO": "",
-                    "4.1.1 SUSTENTABILIDADE": "APLICAM-SE CRITÉRIOS DE SUSTENTABILIDADE...",
-                    "4.1.2 SUBCONTRATAÇÃO": "NÃO SERÁ ADMITIDA A SUBCONTRATAÇÃO...",
-                    "4.1.3 - GARANTIAS": "",
-                    "4.1.3.1 GARANTIA DA EXECUÇÃO CONTRATUAL": "NÃO SERÁ EXIGIDA GARANTIA CONTRATUAL...",
-                    "4.1.3.2 GARANTIA DO PRODUTO, CONDIÇÕES DE MANUTENÇÃO E ASSISTÊNCIA TÉCNICA": "NÃO SE APLICA...",
-                    "5. MODELO DE EXECUÇÃO DO OBJETO": "",
-                    "5.1 PRAZO PARA RETIRADA DO EMPENHO": "",
-                    "5.2 PRAZO E FORMA DE ENTREGA": "",
-                    "5.4 RECEBIMENTO DO OBJETO": "",
-                    "5.4.1 RECEBIMENTO PROVISÓRIO": "",
-                    "5.4.2 RECEBIMENTO DEFINITIVO": "",
-                    "5.4.3 DEMAIS REGRAMENTOS": ""
-                }
-            }
+                # Configurar cadeia de recuperação conversacional
+                retrieval_chain_config = ConversationalRetrievalChain.from_llm(
+                    llm=chat_model,
+                    chain_type="stuff",
+                    retriever=db.as_retriever(),
+                    memory=memory
+                )
 
-            # Funções de anonimização
-            def anonimizar_nomes(texto):
-                nomes_regex = r'\b[A-Z][a-z]+(?:\s[A-Z][a-z]+)*\b'
-                texto_anonimizado = re.sub(nomes_regex, '[NOME]', texto)
-                return texto_anonimizado
+                # Preencher e salvar documentos
+                fill_documents_sequence(retrieval_chain_config, temp_dir)
+                st.success("Documentos preenchidos e salvos com sucesso!")
 
-            def anonimizar_emails(texto):
-                email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-                texto_anonimizado = re.sub(email_regex, '[EMAIL]', texto)
-                return texto_anonimizado
+                # Mostrar documentos preenchidos
+                for doc_type in ["DFD", "ETP", "TR"]:
+                    with open(os.path.join(temp_dir, f"{doc_type}.txt"), "r") as file:
+                        st.text(f"{doc_type}:\n" + file.read())
 
-            def anonimizar_enderecos(texto):
-                enderecos_regex = r'\d{1,4} [A-Z][a-z]+(?: [A-Z][a-z]+)*(?:, [A-Z]{2})? \d{5}'
-                texto_anonimizado = re.sub(enderecos_regex, '[ENDEREÇO]', texto)
-                return texto_anonimizado
-
-            def anonimizar_texto(texto):
-                texto = anonimizar_nomes(texto)
-                texto = anonimizar_emails(texto)
-                texto = anonimizar_enderecos(texto)
-                return texto
-
-            # Função para preencher um documento com base no seu tipo
-            def preencher_documento(tipo_documento, retrieval_chain_config):
-                inicial_instrução = """
-                  Considere que todo conteúdo gerado, é para o Ministério público do Estado
-                  da Bahia, logo as referênicas do documento dever ser para esse órgão.
-                """
-                if tipo_documento not in templates:
-                    raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
-
-                template = templates[tipo_documento]
-
-                for campo, descricao em template.items():
-                    question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
-                    template[campo] = response['answer']
-
-                return template
-
-            # Função para salvar documento em formato .docx
-            def salvar_documento_docx(tipo_documento, conteudo):
-                caminho_docx = f"/content/drive/My Drive/Artefados/{tipo_documento}.docx"
-                os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
-                doc = Document()
-
-                doc.add_heading(tipo_documento, level=1)
-
-                for campo, resposta em conteudo.items():
-                    doc.add_heading(campo, level=2)
-                    doc.add_paragraph(resposta, style='BodyText')
-
-                doc.save(caminho_docx)
-                st.success(f"{tipo_documento} salvo em {caminho_docx}")
-
-            tipo_documento = st.selectbox("Selecione o tipo de documento", options=list(templates.keys()))
-
-            if st.button("Preencher Documento"):
-                with st.spinner("Preenchendo documento..."):
-                    documento_preenchido = preencher_documento(tipo_documento, retrieval_chain_config)
-                    salvar_documento_docx(tipo_documento, documento_preenchido)
-                    st.write(documento_preenchido)
-
-        except Exception as e:
-            st.error(f"Ocorreu um erro ao inicializar o ChromaDB: {e}")
+                # Atualizar Chroma DB
+                update_chroma_db(temp_dir, db)
+                st.success("Chroma DB atualizado com sucesso!")
+            except Exception as e:
+                st.error(f"Erro ao configurar ChromaDB ou preencher documentos: {str(e)}")
+        else:
+            st.error("Nenhum documento foi processado devido a um erro.")
