@@ -7,3 +7,4 @@ python-docx
 docx2txt
 pysqlite3-binary
 langchain-community
+tiktoken
