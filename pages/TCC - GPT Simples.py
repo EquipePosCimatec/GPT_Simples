@@ -157,7 +157,7 @@ if uploaded_files:
 
                 template = templates[tipo_documento]
 
-                for campo, descricao in template.items():
+                for campo, descricao em template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
                     response = retrieval_chain_config.invoke({"question": question})
                     template[campo] = response['answer']
@@ -173,7 +173,7 @@ if uploaded_files:
 
                 doc.add_heading(tipo_documento, level=1)
 
-                for campo, resposta in conteudo.items():
+                for campo, resposta em conteudo.items():
                     doc.add_heading(campo, level=2)
                     doc.add_paragraph(resposta, style='BodyText')
 
