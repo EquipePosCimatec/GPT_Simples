@@ -18,7 +18,7 @@ import pysqlite3
 from langchain.vectorstores import Chroma
 
 # Configuração inicial da API OpenAI
-chave = st.secrets["OPENAI_API_KEY"]  # Assumindo que você configurou a chave nas variáveis de ambiente do Streamlit
+chave = st.secrets["KEY"]  # Assumindo que você configurou a chave nas variáveis de ambiente do Streamlit
 os.environ["OPENAI_API_KEY"] = chave
 
 # Layout e lógica do aplicativo Streamlit
