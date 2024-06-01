@@ -6,3 +6,6 @@ unstructured
 langchain-chroma
 python-docx
 docx2txt
+chromadb
+docx
+streamlit
