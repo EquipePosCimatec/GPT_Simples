@@ -1,23 +1,16 @@
 import streamlit as st
-import os
-import tempfile
-from langchain_community.document_loaders import DirectoryLoader
-from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from io import StringIO, BytesIO
+from langchain.schema import Document as LangDocument
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
-from langchain_openai import ChatOpenAI
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.chat_models import ChatOpenAI
 from docx import Document
-import sys
-
-# Importe e manipule o módulo sqlite3
-__import__('pysqlite3')
-import pysqlite3
-sys.modules['sqlite3'] = sys.modules["pysqlite3"]
-
-# Agora você pode importar o chromadb
-import chromadb
+import docx2txt
+import os
+import re
 
 # Configuração inicial da API OpenAI
 chave = st.secrets["KEY"]  # Assumindo que você configurou a chave nas variáveis de ambiente do Streamlit
@@ -154,7 +147,7 @@ if uploaded_files:
 
                 template = templates[tipo_documento]
 
-                for campo, descricao in template.items():
+                for campo, descricao em template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
                     response = retrieval_chain_config.invoke({"question": question})
                     template[campo] = response['answer']
@@ -169,7 +162,7 @@ if uploaded_files:
 
                 doc.add_heading(tipo_documento, level=1)
 
-                for campo, resposta in conteudo.items():
+                for campo, resposta em conteudo.items():
                     doc.add_heading(campo, level=2)
                     doc.add_paragraph(resposta, style='BodyText')
 
