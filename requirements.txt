@@ -9,4 +9,4 @@ docx2txt
 docx
 streamlit
 pysqlite3
-chromadb
+chromadb==0.4.0
