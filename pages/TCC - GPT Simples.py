@@ -27,7 +27,7 @@ chave = st.secrets["KEY"]  # Assumindo que você configurou a chave nas variáve
 os.environ["OPENAI_API_KEY"] = chave
 
 # Layout e lógica do aplicativo Streamlit
-st.title("Gerador de Documentos para o MPBA")
+st.subheader("Gerador de Documentos para o MPBA")
 
 # Componente de upload de arquivos no Streamlit
 uploaded_files = st.file_uploader("Carregue os arquivos", accept_multiple_files=True)
