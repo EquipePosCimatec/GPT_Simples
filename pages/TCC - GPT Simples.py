@@ -54,8 +54,8 @@ if uploaded_files:
         # Criar embedder com o modelo da OpenAI
         embedder = OpenAIEmbeddings(model="text-embedding-3-large")
 
-        # Carregar Chroma com documentos e embedder
-        db = Chroma.from_documents(docs, embedder)
+        # Criar ChromaDB com documentos e embedder
+        db = Chroma.from_documents(docs, embedder, collection_name="document_collection")
 
         # Configurar o modelo de chat com GPT-4 e memória de conversação
         chat_model = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo")
