@@ -12,7 +12,7 @@ with col2:
 st.markdown("---")
 
 # Título
-st.title('Aplicação de Data Science e Analytics')
+st.subheader('TCC da Pós Graduação do MPBA em Data Science e Analytics')
 
 # Introdução
 st.markdown("""Este trabalho tem como objetivo explorar a aplicação de Data Science e Analytics, para contrução do TCC, com base no aprendizado da Pós Graduação do MPBA no Cimatec. Através do uso de técnicas implementadas na linguagem Python, inteligência Artificial, RAG e LLM, os 
