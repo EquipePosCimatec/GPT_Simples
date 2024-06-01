@@ -62,7 +62,7 @@ if uploaded_files:
         docs = text_splitter.split_documents(lang_docs)
 
         # Criar embedder com o modelo da OpenAI
-        embedder = OpenAIEmbeddings(model="text-embedding-3-large")
+        embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
 
         try:
             # Criar ChromaDB com documentos e embedder
@@ -150,7 +150,7 @@ if uploaded_files:
             def preencher_documento(tipo_documento, retrieval_chain_config):
                 inicial_instrução = """
                   Considere que todo conteúdo gerado, é para o Ministério público do Estado
-                  da Bahia, logo as referênicas do documento dever ser para esse órgão.
+                  da Bahia, logo as referências do documento devem ser para esse órgão.
                 """
                 if tipo_documento not in templates:
                     raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
@@ -166,7 +166,8 @@ if uploaded_files:
 
             # Função para salvar documento em formato .docx
             def salvar_documento_docx(tipo_documento, conteudo):
-                caminho_docx = f"/content/drive/My Drive/Artefados/{tipo_documento}.docx"
+                # Salvar em um diretório local acessível
+                caminho_docx = f"./artefatos/{tipo_documento}.docx"
                 os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
                 doc = Document()
 
