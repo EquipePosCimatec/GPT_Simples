@@ -1,16 +1,3 @@
-import streamlit as st
-from io import StringIO, BytesIO
-from langchain.schema import Document as LangDocument
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.chains import ConversationalRetrievalChain
-from langchain.memory import ConversationBufferMemory
-from langchain.chat_models import ChatOpenAI
-from docx import Document
-import docx2txt
-import os
-import re
-
 import sys
 
 # Importe e manipule o módulo sqlite3
@@ -20,6 +7,20 @@ sys.modules['sqlite3'] = sys.modules["pysqlite3"]
 
 # Agora você pode importar o chromadb
 import chromadb
+
+import streamlit as st
+from io import StringIO, BytesIO
+from langchain.schema import Document as LangDocument
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
+from langchain.chat_models import ChatOpenAI
+from docx import Document
+import docx2txt
+import os
+import re
 
 # Configuração inicial da API OpenAI
 chave = st.secrets["KEY"]  # Assumindo que você configurou a chave nas variáveis de ambiente do Streamlit
