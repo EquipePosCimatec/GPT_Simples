@@ -65,8 +65,8 @@ if uploaded_files:
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
 
         try:
-            # Criar ChromaDB com documentos e embedder
-            db = Chroma.from_documents(docs, embedder, collection_name="document_collection")
+            # Criar ChromaDB com documentos e embedder (garantir nova coleção)
+            db = Chroma.from_documents(docs, embedder, collection_name="document_collection_new")
             
             # Configurar o modelo de chat com GPT-4 e memória de conversação
             chat_model = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo")
@@ -173,7 +173,7 @@ if uploaded_files:
 
                 doc.add_heading(tipo_documento, level=1)
 
-                for campo, resposta in conteudo.items():
+                for campo, resposta em conteudo.items():
                     doc.add_heading(campo, level=2)
                     doc.add_paragraph(resposta, style='BodyText')
 
