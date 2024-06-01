@@ -15,9 +15,9 @@ st.markdown("---")
 st.title('Aplicação de Data Science e Analytics')
 
 # Introdução
-st.markdown("""Este trabalho tem como objetivo explorar a aplicação de Data Science e Analytics, para contrução do TCC, com base no aprendizado da Pós Graduação do MPBA no Cimatec. Através do uso de técnicas implementadas na linguagem Python, inteligência Artificial, RAG e LLM os 
+st.markdown("""Este trabalho tem como objetivo explorar a aplicação de Data Science e Analytics, para contrução do TCC, com base no aprendizado da Pós Graduação do MPBA no Cimatec. Através do uso de técnicas implementadas na linguagem Python, inteligência Artificial, RAG e LLM, os 
 **Servidores Carlos Stucki, Gerson Yamashita e Sandro Dantas**
- fezeram um aplicativo protótipo para demonstração, com a funcionalidade de produção de artefatos de licitação.""")
+ fizeram um aplicativo protótipo para demonstração, com a funcionalidade de produzir artefatos de licitação.""")
 
 # Modelos de Machine Learning
 st.subheader('Funcionalidades do aplicativo:')
