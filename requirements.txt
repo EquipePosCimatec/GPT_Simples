@@ -9,3 +9,4 @@ docx2txt
 chromadb
 docx
 streamlit
+pysqlite3
