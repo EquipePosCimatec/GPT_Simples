@@ -11,11 +11,15 @@ import docx2txt
 import os
 import re
 
-# Importar pysqlite3 antes de chromadb
-import pysqlite3
+import sys
 
-# Importar chromadb após pysqlite3
-from langchain.vectorstores import Chroma
+# Importe e manipule o módulo sqlite3
+__import__('pysqlite3')
+import pysqlite3
+sys.modules['sqlite3'] = sys.modules["pysqlite3"]
+
+# Agora você pode importar o chromadb
+import chromadb
 
 # Configuração inicial da API OpenAI
 chave = st.secrets["KEY"]  # Assumindo que você configurou a chave nas variáveis de ambiente do Streamlit
