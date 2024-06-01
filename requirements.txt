@@ -1,12 +1,8 @@
+streamlit
 langchain
 openai
-tiktoken
-langchain_experimental
-unstructured
-langchain-chroma
+docx
+chromadb
 python-docx
 docx2txt
-docx
-streamlit
-pysqlite3
-chromadb==0.4.0
+pysqlite3-binary
