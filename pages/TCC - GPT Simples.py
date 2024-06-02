@@ -159,7 +159,7 @@ if uploaded_files:
 
                 for campo, descricao in template.items():
                     question = inicial_instrucao + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
+                    response = retrieval_chain_config({"question": question})
                     template[campo] = response['answer']
                     referencias_chunks[campo] = [chunk.page_content for chunk in response['source_documents']]
 
@@ -168,7 +168,7 @@ if uploaded_files:
             # Função para salvar documento em formato .docx
             def salvar_documento_docx(tipo_documento, conteudo, referencias):
                 caminho_docx = f"./artefatos/{tipo_documento}.docx"
-                os.makedirs(os.path.dirname(caminho_docx), existindo_ok=True)
+                os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
                 doc = Document()
 
                 doc.add_heading(tipo_documento, level=1)
