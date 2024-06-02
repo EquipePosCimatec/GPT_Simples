@@ -64,7 +64,9 @@ if uploaded_files:
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
 
         try:
-            # Criar ChromaDB com documentos e embedder
+            # Criar ChromaDB com documentos e embedder, forçando a recriação da coleção
+            chroma_client = chromadb.Client()
+            chroma_client.delete_collection(name="document_collection")
             db = Chroma.from_documents(docs, embedder, collection_name="document_collection")
             
             # Configurar o modelo de chat com GPT-4 e memória de conversação
@@ -159,9 +161,9 @@ if uploaded_files:
 
                 for campo, descricao in template.items():
                     question = inicial_instrucao + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config({"question": question})
+                    response = retrieval_chain_config.invoke({"question": question})
                     template[campo] = response['answer']
-                    referencias_chunks[campo] = [chunk.page_content for chunk in response['source_documents']]
+                    referencias_chunks[campo] = [f"Chunk {chunk.metadata['chunk_index']}: {chunk.page_content[:100]}..." for chunk in response['source_documents']]
 
                 return template, referencias_chunks
 
