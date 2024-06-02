@@ -168,7 +168,10 @@ if uploaded_files:
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
                     response = retrieval_chain_config.invoke({"question": question})
                     st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
-                    template[campo] = response['answer']
+                    if response and 'answer' in response:
+                        template[campo] = response['answer']
+                    else:
+                        template[campo] = "Informação não encontrada nos documentos fornecidos."
 
                 return template
 
