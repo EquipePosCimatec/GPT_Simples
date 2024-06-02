@@ -27,7 +27,7 @@ chave = st.secrets["KEY"]  # Assumindo que você configurou a chave nas variáve
 os.environ["OPENAI_API_KEY"] = chave
 
 # Layout e lógica do aplicativo Streamlit
-st.subheader("Gerador de Documentos para o MPBA")
+st.title("Gerador de Documentos para o MPBA")
 
 # Componente de upload de arquivos no Streamlit
 uploaded_files = st.file_uploader("Carregue os arquivos", accept_multiple_files=True)
@@ -61,8 +61,15 @@ if uploaded_files:
         text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
         docs = text_splitter.split_documents(lang_docs)
 
+        # Verificar os chunks gerados
+        st.write("Chunks gerados:", docs)
+
         # Criar embedder com o modelo da OpenAI
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
+
+        # Verificar embeddings
+        embeddings = embedder.embed_documents([doc.page_content for doc in docs])
+        st.write("Embeddings gerados:", embeddings)
 
         try:
             # Criar ChromaDB com documentos e embedder (garantir nova coleção)
@@ -160,6 +167,7 @@ if uploaded_files:
                 for campo, descricao in template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
                     response = retrieval_chain_config.invoke({"question": question})
+                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
                     template[campo] = response['answer']
 
                 return template
