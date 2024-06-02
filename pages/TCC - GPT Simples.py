@@ -139,7 +139,7 @@ if uploaded_files:
             def anonimizar_enderecos(texto):
                 enderecos_regex = r'\d{1,4} [A-Z][a-z]+(?: [A-Z][a-z]+)*(?:, [A-Z]{2})? \d{5}'
                 texto_anonimizado = re.sub(enderecos_regex, '[ENDEREÇO]', texto)
-                return texto_anonimizado
+                return texto
 
             def anonimizar_texto(texto):
                 texto = anonimizar_nomes(texto)
@@ -159,7 +159,7 @@ if uploaded_files:
                 template = templates[tipo_documento]
                 referencias_chunks = {}
 
-                for campo, descricao in template.items():
+                for campo, descricao em template.items():
                     question = inicial_instrucao + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
                     response = retrieval_chain_config.invoke({"question": question})
                     template[campo] = response['answer']
