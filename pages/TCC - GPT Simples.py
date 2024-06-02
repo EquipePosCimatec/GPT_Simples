@@ -1,4 +1,5 @@
 import streamlit as st
+from io import StringIO, BytesIO
 from langchain.schema import Document as LangDocument
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
@@ -7,7 +8,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chat_models import ChatOpenAI
 from langchain.vectorstores import Chroma
 import docx2txt
-from io import BytesIO
+from docx import Document  # Certifique-se de importar a biblioteca correta
 import os
 import re
 
