@@ -153,28 +153,6 @@ if uploaded_files:
                 texto = anonimizar_enderecos(texto)
                 return texto
 
-            # Função para preencher um documento com base no seu tipo
-            def preencher_documento(tipo_documento, retrieval_chain_config):
-                inicial_instrução = """
-                  Considere que todo conteúdo gerado, é para o Ministério público do Estado
-                  da Bahia, logo as referências do documento devem ser para esse órgão.
-                """
-                if tipo_documento not in templates:
-                    raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
-
-                template = templates[tipo_documento]
-
-                for campo, descricao in template.items():
-                    question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
-                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
-                    if response and 'answer' in response:
-                        template[campo] = response['answer']
-                    else:
-                        template[campo] = "Informação não encontrada nos documentos fornecidos."
-
-                return template
-
             # Função para preencher um documento com base no seu tipo e retornar os chunks usados
             def preencher_documento_com_chunks(tipo_documento, retrieval_chain_config):
                 inicial_instrução = """
