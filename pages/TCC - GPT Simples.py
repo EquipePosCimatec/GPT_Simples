@@ -189,7 +189,7 @@ if uploaded_files:
 
                 for campo, descricao in template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
+                    response = retrieval_chain_config.invoke({"question": question, "return_source_documents": True})
                     st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
                     if response and 'answer' in response:
                         template[campo] = response['answer']
