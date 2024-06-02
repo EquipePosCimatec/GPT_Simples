@@ -11,7 +11,6 @@ from docx import Document
 import docx2txt
 import os
 import re
-
 import sys
 
 # Importe e manipule o módulo sqlite3
@@ -61,23 +60,12 @@ if uploaded_files:
         text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
         docs = text_splitter.split_documents(lang_docs)
 
-        # Numerar os chunks
-        for i, doc in enumerate(docs):
-            doc.metadata = {"chunk_index": i}
-
-        # Verificar os chunks gerados
-        st.write("Chunks gerados:", docs)
-
         # Criar embedder com o modelo da OpenAI
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
 
-        # Verificar embeddings
-        embeddings = embedder.embed_documents([doc.page_content for doc in docs])
-        st.write("Embeddings gerados:", embeddings)
-
         try:
-            # Criar ChromaDB com documentos e embedder (garantir nova coleção)
-            db = Chroma.from_documents(docs, embedder, collection_name="document_collection_new")
+            # Criar ChromaDB com documentos e embedder
+            db = Chroma.from_documents(docs, embedder, collection_name="document_collection")
             
             # Configurar o modelo de chat com GPT-4 e memória de conversação
             chat_model = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo")
@@ -157,38 +145,28 @@ if uploaded_files:
                 texto = anonimizar_enderecos(texto)
                 return texto
 
-            # Função para preencher um documento com base no seu tipo e retornar os chunks usados
-            def preencher_documento_com_chunks(tipo_documento, retrieval_chain_config):
-                inicial_instrução = """
-                  Considere que todo conteúdo gerado, é para o Ministério público do Estado
-                  da Bahia, logo as referências do documento devem ser para esse órgão.
+            # Função para preencher um documento com base no seu tipo
+            def preencher_documento(tipo_documento, retrieval_chain_config):
+                inicial_instrucao = """
+                Considere que todo conteúdo gerado, é para o Ministério público do Estado
+                da Bahia, logo as referências do documento devem ser para esse órgão.
                 """
                 if tipo_documento not in templates:
                     raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
 
                 template = templates[tipo_documento]
-                chunk_references = {}
+                referencias_chunks = {}
 
                 for campo, descricao in template.items():
-                    question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
+                    question = inicial_instrucao + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
                     response = retrieval_chain_config.invoke({"question": question})
-                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
-                    if response and 'answer' in response:
-                        template[campo] = response['answer']
-                        # Armazenar referências dos documentos usados
-                        chunk_references[campo] = [
-                            {"chunk_index": doc.metadata.get("chunk_index", "N/A"), "text": doc.page_content}
-                            for doc in response.get('source_documents', [])
-                        ]
-                    else:
-                        template[campo] = "Informação não encontrada nos documentos fornecidos."
-                        chunk_references[campo] = []
+                    template[campo] = response['answer']
+                    referencias_chunks[campo] = [chunk.page_content for chunk in response['source_documents']]
 
-                return template, chunk_references
+                return template, referencias_chunks
 
             # Função para salvar documento em formato .docx
-            def salvar_documento_docx(tipo_documento, conteudo):
-                # Salvar em um diretório local acessível
+            def salvar_documento_docx(tipo_documento, conteudo, referencias):
                 caminho_docx = f"./artefatos/{tipo_documento}.docx"
                 os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
                 doc = Document()
@@ -198,6 +176,10 @@ if uploaded_files:
                 for campo, resposta in conteudo.items():
                     doc.add_heading(campo, level=2)
                     doc.add_paragraph(resposta, style='BodyText')
+                    if referencias.get(campo):
+                        doc.add_heading("Referências dos chunks utilizados:", level=3)
+                        for referencia in referencias[campo]:
+                            doc.add_paragraph(referencia, style='BodyText')
 
                 doc.save(caminho_docx)
                 st.success(f"{tipo_documento} salvo em {caminho_docx}")
@@ -206,10 +188,10 @@ if uploaded_files:
 
             if st.button("Preencher Documento"):
                 with st.spinner("Preenchendo documento..."):
-                    documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, retrieval_chain_config)
-                    salvar_documento_docx(tipo_documento, documento_preenchido)
-                    st.write("Documento preenchido:", documento_preenchido)
-                    st.write("Referências dos chunks utilizados:", chunk_references)
+                    documento_preenchido, referencias_chunks = preencher_documento(tipo_documento, retrieval_chain_config)
+                    salvar_documento_docx(tipo_documento, documento_preenchido, referencias_chunks)
+                    st.write(documento_preenchido)
+                    st.write("Referências dos chunks utilizados:", referencias_chunks)
 
         except Exception as e:
             st.error(f"Ocorreu um erro ao inicializar o ChromaDB: {e}")
