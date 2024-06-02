@@ -80,7 +80,7 @@ if uploaded_files:
             memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
 
             # Configurar a cadeia de recuperação conversacional
-            retrieval_chain_config = ConversationalRetrievalChain.from_llm(
+            retrieval_chain = ConversationalRetrievalChain.from_llm(
                 llm=chat_model,
                 chain_type="stuff",
                 retriever=db.as_retriever(return_source_documents=True),
@@ -153,30 +153,8 @@ if uploaded_files:
                 texto = anonimizar_enderecos(texto)
                 return texto
 
-            # Função para preencher um documento com base no seu tipo
-            def preencher_documento(tipo_documento, retrieval_chain_config):
-                inicial_instrução = """
-                  Considere que todo conteúdo gerado, é para o Ministério público do Estado
-                  da Bahia, logo as referências do documento devem ser para esse órgão.
-                """
-                if tipo_documento not in templates:
-                    raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
-
-                template = templates[tipo_documento]
-
-                for campo, descricao in template.items():
-                    question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
-                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
-                    if response and 'answer' in response:
-                        template[campo] = response['answer']
-                    else:
-                        template[campo] = "Informação não encontrada nos documentos fornecidos."
-
-                return template
-
             # Função para preencher um documento com base no seu tipo e retornar os chunks usados
-            def preencher_documento_com_chunks(tipo_documento, retrieval_chain_config):
+            def preencher_documento_com_chunks(tipo_documento, retrieval_chain):
                 inicial_instrução = """
                   Considere que todo conteúdo gerado, é para o Ministério público do Estado
                   da Bahia, logo as referências do documento devem ser para esse órgão.
@@ -189,7 +167,7 @@ if uploaded_files:
 
                 for campo, descricao in template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question, "return_source_documents": True})
+                    response = retrieval_chain({"question": question})
                     st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
                     if response and 'answer' in response:
                         template[campo] = response['answer']
@@ -221,7 +199,7 @@ if uploaded_files:
 
             if st.button("Preencher Documento"):
                 with st.spinner("Preenchendo documento..."):
-                    documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, retrieval_chain_config)
+                    documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, retrieval_chain)
                     salvar_documento_docx(tipo_documento, documento_preenchido)
                     st.write("Documento preenchido:", documento_preenchido)
                     st.write("Referências dos chunks utilizados:", chunk_references)
