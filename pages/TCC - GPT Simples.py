@@ -1,5 +1,5 @@
 import streamlit as st
-from io import StringIO, BytesIO
+from io import BytesIO
 from langchain.schema import Document as LangDocument
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
@@ -17,6 +17,8 @@ chave = st.secrets["KEY"]
 os.environ["OPENAI_API_KEY"] = chave
 
 st.title("Gerador de Documentos para o MPBA")
+
+# Componente de upload de arquivos no Streamlit
 uploaded_files = st.file_uploader("Carregue os arquivos", accept_multiple_files=True)
 
 def read_file(file):
@@ -40,20 +42,35 @@ if uploaded_files:
             documents.append(content)
 
     if documents:
+        # Converter conteúdo dos arquivos para objetos LangDocument
         lang_docs = [LangDocument(page_content=doc) for doc in documents]
+
+        # Dividir documentos em chunks
         text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
         chunks = text_splitter.split_documents(lang_docs)
 
+        # Armazenar os chunks na sessão do Streamlit
         st.session_state.chunks = chunks
-        st.write("Chunks gerados e armazenados na sessão:", chunks)
 
+        # Exibir os chunks gerados
+        st.write("Chunks gerados:")
+        for i, chunk in enumerate(chunks):
+            st.write(f"Chunk {i + 1}:")
+            st.write(chunk.page_content)
+
+        # Criar embedder com o modelo da OpenAI
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
         embeddings = embedder.embed_documents([chunk.page_content for chunk in chunks])
         st.write("Embeddings gerados:", embeddings)
 
+        # Criar ChromaDB com documentos e embedder (garantir nova coleção)
         db = Chroma.from_documents(chunks, embedder, collection_name="document_collection_new")
+        
+        # Configurar o modelo de chat com GPT-4 e memória de conversação
         chat_model = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo")
         memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+
+        # Configurar a cadeia de recuperação conversacional
         retrieval_chain = ConversationalRetrievalChain.from_llm(
             llm=chat_model,
             chain_type="stuff",
@@ -61,6 +78,7 @@ if uploaded_files:
             memory=memory
         )
 
+        # Definir templates de documentos
         templates = {
             "ETP": {
                 "1. DESCRIÇÃO DA NECESSIDADE DA CONTRATAÇÃO": "Este item visa clarificar o problema ou a deficiência...",
@@ -85,7 +103,6 @@ if uploaded_files:
                 response = retrieval_chain({"question": question})
                 st.write(f"Resposta para {campo}:", response)
                 
-                # Adicionar logs de depuração
                 if response and 'answer' in response:
                     template[campo] = response['answer']
                     if 'source_documents' in response:
@@ -102,7 +119,7 @@ if uploaded_files:
 
         def salvar_documento_docx(tipo_documento, conteudo):
             caminho_docx = f"./artefatos/{tipo_documento}.docx"
-            os.makedirs(os.path.dirname(caminho_docx), existindo_ok=True)
+            os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
             doc = Document()
 
             doc.add_heading(tipo_documento, level=1)
