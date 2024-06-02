@@ -61,6 +61,10 @@ if uploaded_files:
         text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
         docs = text_splitter.split_documents(lang_docs)
 
+        # Numerar os chunks
+        for i, doc in enumerate(docs):
+            doc.metadata = {"chunk_index": i}
+
         # Verificar os chunks gerados
         st.write("Chunks gerados:", docs)
 
@@ -92,16 +96,16 @@ if uploaded_files:
                 "ETP": {
                     "1. DESCRIÇÃO DA NECESSIDADE DA CONTRATAÇÃO": "Este item visa clarificar o problema ou a deficiência...",
                     "2. PREVISÃO DA CONTRATAÇÃO NO PLANO DE CONTRATAÇÕES ANUAL – PCA": "Indique a inclusão desta contratação...",
-                    #"3. DESCRIÇÃO DOS REQUISITOS DA CONTRATAÇÃO": "Especifique todos os requisitos técnicos e de desempenho necessários...",
-                    #"4. ESTIMATIVAS DAS QUANTIDADES PARA A CONTRATAÇÃO": "Baseando-se em consumo real e projeções futuras...",
-                    #"5. LEVANTAMENTO DE MERCADO": "Realize uma pesquisa comparativa de mercado...",
-                    #"6. ESTIMATIVA DO VALOR DA CONTRATAÇÃO": "Informe a estimativa do valor total e unitário da contratação...",
-                    #"7. DESCRIÇÃO DA SOLUÇÃO": "Descreva a solução escolhida de forma abrangente...",
-                    #"8. PARCELAMENTO OU NÃO DA SOLUÇÃO": "Discuta se a solução será parcelada ou adquirida integralmente...",
-                    #"9. RESULTADOS PRETENDIDOS COM A CONTRATAÇÃO": "Defina os benefícios diretos e indiretos esperados...",
-                    #"10. PROVIDÊNCIAS A SEREM ADOTADAS PELA ADMINISTRAÇÃO PREVIAMENTE À CONTRATAÇÃO": "Identifique quaisquer ações necessárias...",
-                    #"11. CONTRATAÇÕES CORRELATAS E/OU INTERDEPENDENTES": "Liste quaisquer contratações relacionadas...",
-                    #"12. POSSÍVEIS IMPACTOS AMBIENTAIS": "Analise os impactos ambientais da contratação...",
+                    "3. DESCRIÇÃO DOS REQUISITOS DA CONTRATAÇÃO": "Especifique todos os requisitos técnicos e de desempenho necessários...",
+                    "4. ESTIMATIVAS DAS QUANTIDADES PARA A CONTRATAÇÃO": "Baseando-se em consumo real e projeções futuras...",
+                    "5. LEVANTAMENTO DE MERCADO": "Realize uma pesquisa comparativa de mercado...",
+                    "6. ESTIMATIVA DO VALOR DA CONTRATAÇÃO": "Informe a estimativa do valor total e unitário da contratação...",
+                    "7. DESCRIÇÃO DA SOLUÇÃO": "Descreva a solução escolhida de forma abrangente...",
+                    "8. PARCELAMENTO OU NÃO DA SOLUÇÃO": "Discuta se a solução será parcelada ou adquirida integralmente...",
+                    "9. RESULTADOS PRETENDIDOS COM A CONTRATAÇÃO": "Defina os benefícios diretos e indiretos esperados...",
+                    "10. PROVIDÊNCIAS A SEREM ADOTADAS PELA ADMINISTRAÇÃO PREVIAMENTE À CONTRATAÇÃO": "Identifique quaisquer ações necessárias...",
+                    "11. CONTRATAÇÕES CORRELATAS E/OU INTERDEPENDENTES": "Liste quaisquer contratações relacionadas...",
+                    "12. POSSÍVEIS IMPACTOS AMBIENTAIS": "Analise os impactos ambientais da contratação...",
                     "13. POSICIONAMENTO CONCLUSIVO SOBRE A CONTRATAÇÃO": "Forneça uma declaração final sobre a viabilidade..."
                 },
                 "TR": {
@@ -172,7 +176,10 @@ if uploaded_files:
                     if response and 'answer' in response:
                         template[campo] = response['answer']
                         # Armazenar referências dos documentos usados
-                        chunk_references[campo] = [doc.page_content for doc in response.get('source_documents', [])]
+                        chunk_references[campo] = [
+                            {"chunk_index": doc.metadata.get("chunk_index", "N/A"), "text": doc.page_content}
+                            for doc in response.get('source_documents', [])
+                        ]
                     else:
                         template[campo] = "Informação não encontrada nos documentos fornecidos."
                         chunk_references[campo] = []
