@@ -84,9 +84,16 @@ if uploaded_files:
                 question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
                 response = retrieval_chain({"question": question})
                 st.write(f"Resposta para {campo}:", response)
+                
+                # Adicionar logs de depuração
                 if response and 'answer' in response:
                     template[campo] = response['answer']
-                    chunk_references[campo] = [doc.page_content for doc in response.get('source_documents', [])]
+                    if 'source_documents' in response:
+                        st.write(f"Documentos de origem para {campo}: {response['source_documents']}")
+                        chunk_references[campo] = [doc.page_content for doc in response['source_documents']]
+                    else:
+                        st.write(f"Nenhum documento de origem encontrado para {campo}")
+                        chunk_references[campo] = []
                 else:
                     template[campo] = "Informação não encontrada nos documentos fornecidos."
                     chunk_references[campo] = []
