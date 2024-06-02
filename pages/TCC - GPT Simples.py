@@ -161,7 +161,7 @@ if uploaded_files:
 
                 for campo, descricao in template.items():
                     question = inicial_instrucao + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
+                    response = retrieval_chain_config({"question": question})
                     template[campo] = response['answer']
                     referencias_chunks[campo] = [f"Chunk {chunk.metadata['chunk_index']}: {chunk.page_content[:100]}..." for chunk in response['source_documents']]
 
