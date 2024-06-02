@@ -8,7 +8,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chat_models import ChatOpenAI
 from langchain.vectorstores import Chroma
 import docx2txt
-from docx import Document  # Certifique-se de importar a biblioteca correta
+from docx import Document
 import os
 import re
 
@@ -102,7 +102,7 @@ if uploaded_files:
 
         def salvar_documento_docx(tipo_documento, conteudo):
             caminho_docx = f"./artefatos/{tipo_documento}.docx"
-            os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
+            os.makedirs(os.path.dirname(caminho_docx), existindo_ok=True)
             doc = Document()
 
             doc.add_heading(tipo_documento, level=1)
