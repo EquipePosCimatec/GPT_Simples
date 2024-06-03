@@ -222,9 +222,10 @@ if uploaded_files:
                 st.success(f"{tipo_documento} salvo em {caminho_docx}")
 
             def listar_documentos_chromadb(db):
-                # Recupera todos os documentos armazenados no ChromaDB
-                documentos = db.get_all_documents()
-                return documentos
+                # Realiza uma busca com um termo comum para recuperar todos os documentos
+                # Dependendo da implementação do seu ChromaDB, ajuste o termo de busca se necessário
+                resultados = db.similarity_search("the", k=1000)  # Ajuste k para o número máximo de documentos que espera listar
+                return resultados
 
             tipo_documento = st.selectbox("Selecione o tipo de documento", options=list(templates.keys()))
 
