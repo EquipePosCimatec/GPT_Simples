@@ -122,7 +122,7 @@ if uploaded_files:
             doc = Document()
 
             doc.add_heading(tipo_documento, level=1)
-            for campo, resposta em conteudo.items():
+            for campo, resposta in conteudo.items():
                 doc.add_heading(campo, level=2)
                 doc.add_paragraph(resposta, style='BodyText')
 
