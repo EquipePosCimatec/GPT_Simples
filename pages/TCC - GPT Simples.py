@@ -162,13 +162,13 @@ if uploaded_files:
                 for campo, descricao in template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
                     # Recuperar chunks relevantes antes de passar para a LLM
-                    retrieved_chunks = retrieval_chain_config.retriever.retrieve(question)
+                    retrieved_chunks = retrieval_chain_config.retriever.get_relevant_documents(question)
                     st.write(f"Chunks recuperados para {campo}:")
                     for i, chunk in enumerate(retrieved_chunks):
                         st.markdown(f"**Chunk {i+1}:**")
                         st.write(chunk.page_content)
 
-                    response = retrieval_chain_config.invoke({"question": question, "source_documents": retrieved_chunks})
+                    response = retrieval_chain_config({"question": question, "source_documents": retrieved_chunks})
                     st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
                     if response and 'answer' in response:
                         template[campo] = response['answer']
@@ -184,7 +184,7 @@ if uploaded_files:
             def salvar_documento_docx(tipo_documento, conteudo):
                 # Salvar em um diretório local acessível
                 caminho_docx = f"./artefatos/{tipo_documento}.docx"
-                os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
+                os.makedirs(os.path.dirname(caminho_docx), exist.ok=True)
                 doc = Document()
 
                 doc.add_heading(tipo_documento, level=1)
