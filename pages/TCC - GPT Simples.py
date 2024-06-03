@@ -104,11 +104,14 @@ if uploaded_files:
                 st.write(f"Question: {question}")
 
                 # Passar o contexto concatenado diretamente para a LLM
-                response = retrieval_chain.invoke({"question": question, "context": concatenated_chunks})
+                inputs = {"input": question + "\n\n" + concatenated_chunks}
+                
+                # Corrigir a chamada para a cadeia de recuperação
+                response = retrieval_chain.invoke(inputs)
                 st.write(f"Resposta para {campo}:", response)
 
-                if response and 'answer' in response:
-                    template[campo] = response['answer']
+                if response and 'output' in response:
+                    template[campo] = response['output']
                     chunk_references[campo] = [chunk.page_content for chunk in chunks]
                 else:
                     template[campo] = "Informação não encontrada nos documentos fornecidos."
