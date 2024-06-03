@@ -10,7 +10,6 @@ from langchain.vectorstores import Chroma
 import docx2txt
 from docx import Document
 import os
-import re
 
 # Configuração inicial da API OpenAI
 chave = st.secrets["KEY"]
@@ -87,9 +86,9 @@ if uploaded_files:
             }
         }
 
-        def preencher_documento_com_chunks(tipo_documento, retrieval_chain):
+        def preencher_documento_com_chunks(tipo_documento, chunks):
             inicial_instrução = """
-              Considere que todo conteúdo gerado, é para o Ministério público do Estado
+              Considere que todo conteúdo gerado é para o Ministério Público do Estado
               da Bahia, logo as referências do documento devem ser para esse órgão.
             """
             if tipo_documento not in templates:
@@ -99,17 +98,16 @@ if uploaded_files:
             chunk_references = {}
 
             for campo, descricao in template.items():
-                question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                response = retrieval_chain({"question": question})
-                st.write(f"Resposta para {campo}:", response)
-                
-                if response and 'answer' in response:
-                    template[campo] = response['answer']
-                    if 'source_documents' in response:
-                        st.write(f"Documentos de origem para {campo}: {response['source_documents']}")
-                        chunk_references[campo] = [doc.page_content for doc in response['source_documents']]
+                question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa: {descricao}."
+                relevant_chunks = [chunk.page_content for chunk in chunks if descricao in chunk.page_content]
+                if relevant_chunks:
+                    response = retrieval_chain({"question": question, "docs": relevant_chunks})
+                    st.write(f"Resposta para {campo}:", response)
+                    if response and 'answer' in response:
+                        template[campo] = response['answer']
+                        chunk_references[campo] = relevant_chunks
                     else:
-                        st.write(f"Nenhum documento de origem encontrado para {campo}")
+                        template[campo] = "Informação não encontrada nos documentos fornecidos."
                         chunk_references[campo] = []
                 else:
                     template[campo] = "Informação não encontrada nos documentos fornecidos."
@@ -134,7 +132,7 @@ if uploaded_files:
 
         if st.button("Preencher Documento"):
             with st.spinner("Preenchendo documento..."):
-                documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, retrieval_chain)
+                documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, st.session_state.chunks)
                 salvar_documento_docx(tipo_documento, documento_preenchido)
                 st.write("Documento preenchido:", documento_preenchido)
                 st.write("Referências dos chunks utilizados:", chunk_references)
