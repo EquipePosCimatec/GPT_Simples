@@ -184,7 +184,7 @@ if uploaded_files:
             def salvar_documento_docx(tipo_documento, conteudo):
                 # Salvar em um diretório local acessível
                 caminho_docx = f"./artefatos/{tipo_documento}.docx"
-                os.makedirs(os.path.dirname(caminho_docx), exist.ok=True)
+                os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
                 doc = Document()
 
                 doc.add_heading(tipo_documento, level=1)
