@@ -3,8 +3,6 @@ from io import BytesIO
 from langchain.schema import Document as LangDocument
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.chains import ConversationalRetrievalChain
-from langchain.memory import ConversationBufferMemory
 from langchain.chat_models import ChatOpenAI
 from docx import Document
 import docx2txt
@@ -56,9 +54,8 @@ if uploaded_files:
         # Armazenar chunks em uma lista
         chunks = [doc.page_content for doc in docs]
 
-        # Configurar o modelo de chat com GPT-4 e memória de conversação
+        # Configurar o modelo de chat com GPT-4
         chat_model = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo")
-        memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
 
         # Definir templates de documentos
         templates = {
@@ -143,7 +140,8 @@ if uploaded_files:
             # Simula a resposta baseada nos chunks
             contexto = "\n\n".join(chunks)
             prompt = f"Contexto: {contexto}\n\nPergunta: {pergunta}\nResposta:"
-            response = chat_model([{"role": "user", "content": prompt}])
+            messages = [{"role": "user", "content": prompt}]
+            response = chat_model(messages)
             return response.choices[0].message["content"].strip()
 
         # Função para salvar documento em formato .docx
