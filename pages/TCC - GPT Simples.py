@@ -96,16 +96,6 @@ if uploaded_files:
                 "ETP": {
                     "1. DESCRIÇÃO DA NECESSIDADE DA CONTRATAÇÃO": "Este item visa clarificar o problema ou a deficiência...",
                     "2. PREVISÃO DA CONTRATAÇÃO NO PLANO DE CONTRATAÇÕES ANUAL – PCA": "Indique a inclusão desta contratação...",
-                    #"3. DESCRIÇÃO DOS REQUISITOS DA CONTRATAÇÃO": "Especifique todos os requisitos técnicos e de desempenho necessários...",
-                    #"4. ESTIMATIVAS DAS QUANTIDADES PARA A CONTRATAÇÃO": "Baseando-se em consumo real e projeções futuras...",
-                    #"5. LEVANTAMENTO DE MERCADO": "Realize uma pesquisa comparativa de mercado...",
-                    #"6. ESTIMATIVA DO VALOR DA CONTRATAÇÃO": "Informe a estimativa do valor total e unitário da contratação...",
-                    #"7. DESCRIÇÃO DA SOLUÇÃO": "Descreva a solução escolhida de forma abrangente...",
-                    #"8. PARCELAMENTO OU NÃO DA SOLUÇÃO": "Discuta se a solução será parcelada ou adquirida integralmente...",
-                    #"9. RESULTADOS PRETENDIDOS COM A CONTRATAÇÃO": "Defina os benefícios diretos e indiretos esperados...",
-                    #"10. PROVIDÊNCIAS A SEREM ADOTADAS PELA ADMINISTRAÇÃO PREVIAMENTE À CONTRATAÇÃO": "Identifique quaisquer ações necessárias...",
-                    #"11. CONTRATAÇÕES CORRELATAS E/OU INTERDEPENDENTES": "Liste quaisquer contratações relacionadas...",
-                    #"12. POSSÍVEIS IMPACTOS AMBIENTAIS": "Analise os impactos ambientais da contratação...",
                     "13. POSICIONAMENTO CONCLUSIVO SOBRE A CONTRATAÇÃO": "Forneça uma declaração final sobre a viabilidade..."
                 },
                 "TR": {
@@ -158,32 +148,10 @@ if uploaded_files:
                 return texto
 
             # Função para preencher um documento com base no seu tipo
-            def preencher_documento(tipo_documento, retrieval_chain_config):
-                inicial_instrução = """
-                  Considere que todo conteúdo gerado, é para o Ministério público do Estado
-                  da Bahia, logo as referências do documento devem ser para esse órgão.
-                """
-                if tipo_documento not in templates:
-                    raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
-
-                template = templates[tipo_documento]
-
-                for campo, descricao in template.items():
-                    question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
-                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
-                    if response and 'answer' in response:
-                        template[campo] = response['answer']
-                    else:
-                        template[campo] = "Informação não encontrada nos documentos fornecidos."
-
-                return template
-
-            # Função para preencher um documento com base no seu tipo e retornar os chunks usados
             def preencher_documento_com_chunks(tipo_documento, retrieval_chain_config):
                 inicial_instrução = """
-                  Considere que todo conteúdo gerado, é para o Ministério público do Estado
-                  da Bahia, logo as referências do documento devem ser para esse órgão.
+                  Considere que todo conteúdo gerado é para o Ministério Público do Estado da Bahia,
+                  logo, as referências do documento devem ser para esse órgão.
                 """
                 if tipo_documento not in templates:
                     raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
@@ -193,7 +161,14 @@ if uploaded_files:
 
                 for campo, descricao in template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
+                    # Recuperar chunks relevantes antes de passar para a LLM
+                    retrieved_chunks = retrieval_chain_config.retriever.retrieve(question)
+                    st.write(f"Chunks recuperados para {campo}:")
+                    for i, chunk in enumerate(retrieved_chunks):
+                        st.markdown(f"**Chunk {i+1}:**")
+                        st.write(chunk.page_content)
+
+                    response = retrieval_chain_config.invoke({"question": question, "source_documents": retrieved_chunks})
                     st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
                     if response and 'answer' in response:
                         template[campo] = response['answer']
