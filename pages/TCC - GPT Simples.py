@@ -168,7 +168,7 @@ if uploaded_files:
                         st.markdown(f"**Chunk {i+1}:**")
                         st.write(chunk.page_content)
 
-                    response = retrieval_chain_config.call({"question": question})
+                    response = retrieval_chain_config.__call__({"question": question})
                     st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
                     if response and 'answer' in response:
                         template[campo] = response['answer']
