@@ -221,11 +221,10 @@ if uploaded_files:
                 doc.save(caminho_docx)
                 st.success(f"{tipo_documento} salvo em {caminho_docx}")
 
-            def listar_documentos_chromadb(db):
-                # Realiza uma busca com um termo comum para recuperar todos os documentos
-                # Dependendo da implementação do seu ChromaDB, ajuste o termo de busca se necessário
-                resultados = db.similarity_search("the", k=1000)  # Ajuste k para o número máximo de documentos que espera listar
-                return resultados
+            def listar_primeiro_documento_chromadb(db):
+                # Realiza uma busca com um termo comum para recuperar o primeiro documento
+                resultados = db.similarity_search("the", k=1)  # Ajuste k para retornar apenas o primeiro documento
+                return resultados[0] if resultados else None
 
             tipo_documento = st.selectbox("Selecione o tipo de documento", options=list(templates.keys()))
 
@@ -241,15 +240,16 @@ if uploaded_files:
                             st.markdown(f"**Chunk {i+1}:**")
                             st.write(chunk)
             
-            if st.button("Listar Documentos no ChromaDB"):
+            if st.button("Listar Primeiro Documento no ChromaDB"):
                 try:
-                    documentos_armazenados = listar_documentos_chromadb(db)
-                    st.write("Documentos Armazenados no ChromaDB:")
-                    for i, doc in enumerate(documentos_armazenados):
-                        st.markdown(f"**Documento {i+1}:**")
-                        st.write(doc.page_content)
+                    primeiro_documento = listar_primeiro_documento_chromadb(db)
+                    if primeiro_documento:
+                        st.write("Primeiro Documento Armazenado no ChromaDB:")
+                        st.write(primeiro_documento.page_content)
+                    else:
+                        st.write("Nenhum documento encontrado no ChromaDB.")
                 except Exception as e:
-                    st.error(f"Erro ao listar documentos: {e}")
+                    st.error(f"Erro ao listar documento: {e}")
 
         except Exception as e:
             st.error(f"Ocorreu um erro ao inicializar o ChromaDB: {e}")
