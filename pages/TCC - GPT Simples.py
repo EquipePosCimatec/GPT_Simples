@@ -1,5 +1,5 @@
 import streamlit as st
-from io import StringIO, BytesIO
+from io import BytesIO
 from langchain.schema import Document as LangDocument
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
