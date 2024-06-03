@@ -71,6 +71,9 @@ if uploaded_files:
         embeddings = embedder.embed_documents([doc.page_content for doc in docs])
         st.write("Embeddings gerados:", embeddings)
 
+        # Armazenar chunks em uma lista
+        chunks = [doc.page_content for doc in docs]
+
         try:
             # Criar ChromaDB com documentos e embedder (garantir nova coleção)
             db = Chroma.from_documents(docs, embedder, collection_name="document_collection_new")
@@ -180,8 +183,8 @@ if uploaded_files:
                 # Simula a resposta baseada nos chunks
                 contexto = "\n\n".join(chunks)
                 prompt = f"Contexto: {contexto}\n\nPergunta: {pergunta}\nResposta:"
-                response = chat_model({"prompt": prompt})
-                return response['choices'][0]['text'].strip()
+                response = chat_model.generate([prompt])
+                return response.generations[0][0].text.strip()
 
             # Função para salvar documento em formato .docx
             def salvar_documento_docx(tipo_documento, conteudo):
@@ -203,7 +206,6 @@ if uploaded_files:
 
             if st.button("Preencher Documento"):
                 with st.spinner("Preenchendo documento..."):
-                    chunks = [doc.page_content for doc in docs]
                     documento_preenchido = preencher_documento(tipo_documento, chunks)
                     salvar_documento_docx(tipo_documento, documento_preenchido)
                     st.write("Documento preenchido:", documento_preenchido)
