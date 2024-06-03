@@ -97,16 +97,14 @@ if uploaded_files:
             template = templates[tipo_documento]
             chunk_references = {}
 
+            concatenated_chunks = "\n".join([chunk.page_content for chunk in chunks])
+
             for campo, descricao in template.items():
                 question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa: {descricao}."
                 st.write(f"Question: {question}")
 
-                # Concatenar o conteúdo dos chunks em uma string grande para passar para a LLM
-                concatenated_chunks = "\n".join([chunk.page_content for chunk in chunks])
-                inputs = {"question": question, "context": concatenated_chunks}
-                
-                # Corrigir a chamada para a cadeia de recuperação
-                response = retrieval_chain.invoke(inputs)
+                # Passar o contexto concatenado diretamente para a LLM
+                response = retrieval_chain.invoke({"question": question, "context": concatenated_chunks})
                 st.write(f"Resposta para {campo}:", response)
 
                 if response and 'answer' in response:
@@ -120,11 +118,11 @@ if uploaded_files:
 
         def salvar_documento_docx(tipo_documento, conteudo):
             caminho_docx = f"./artefatos/{tipo_documento}.docx"
-            os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
+            os.makedirs(os.path.dirname(caminho_docx), existindo_ok=True)
             doc = Document()
 
             doc.add_heading(tipo_documento, level=1)
-            for campo, resposta in conteudo.items():
+            for campo, resposta em conteudo.items():
                 doc.add_heading(campo, level=2)
                 doc.add_paragraph(resposta, style='BodyText')
 
