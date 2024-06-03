@@ -103,18 +103,18 @@ if uploaded_files:
                 question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa: {descricao}."
                 st.write(f"Question: {question}")
 
-                # Passar o contexto concatenado diretamente para a LLM
-                inputs = {"question": question, "context": concatenated_chunks}
+                # Combinar o contexto e a pergunta em uma única entrada
+                input_text = f"{question}\n\n{concatenated_chunks}"
                 
                 # Debugging: Adicionar logs para verificar o formato dos inputs
-                st.write(f"Inputs: {inputs}")
+                st.write(f"Input Text: {input_text}")
 
                 try:
-                    response = retrieval_chain(inputs)
+                    response = retrieval_chain({"input": input_text})
                     st.write(f"Resposta para {campo}:", response)
 
-                    if response and 'answer' in response:
-                        template[campo] = response['answer']
+                    if response and 'output' in response:
+                        template[campo] = response['output']
                         chunk_references[campo] = [chunk.page_content for chunk in chunks]
                     else:
                         template[campo] = "Informação não encontrada nos documentos fornecidos."
@@ -128,7 +128,7 @@ if uploaded_files:
 
         def salvar_documento_docx(tipo_documento, conteudo):
             caminho_docx = f"./artefatos/{tipo_documento}.docx"
-            os.makedirs(os.path.dirname(caminho_docx), existindo_ok=True)
+            os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
             doc = Document()
 
             doc.add_heading(tipo_documento, level=1)
