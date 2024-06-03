@@ -74,10 +74,12 @@ if uploaded_files:
         try:
             # Criar ChromaDB com documentos e embedder (garantir nova coleção)
             db = Chroma.from_documents(docs, embedder, collection_name="document_collection_new")
-            
+            st.write("ChromaDB criado e documentos indexados.")
+
             # Configurar o modelo de chat com GPT-4 e memória de conversação
             chat_model = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo")
             memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+            st.write("Modelo de chat e memória configurados.")
 
             # Configurar a cadeia de recuperação conversacional
             retrieval_chain_config = ConversationalRetrievalChain.from_llm(
@@ -86,6 +88,7 @@ if uploaded_files:
                 retriever=db.as_retriever(return_source_documents=True),
                 memory=memory
             )
+            st.write("Cadeia de recuperação conversacional configurada.")
 
             # Definir templates de documentos
             templates = {
@@ -123,28 +126,6 @@ if uploaded_files:
                 texto = anonimizar_enderecos(texto)
                 return texto
 
-            # Função para preencher um documento com base no seu tipo
-            def preencher_documento(tipo_documento, retrieval_chain_config):
-                inicial_instrução = """
-                  Considere que todo conteúdo gerado é para o Ministério Público do Estado
-                  da Bahia, logo as referências do documento devem ser para esse órgão.
-                """
-                if tipo_documento not in templates:
-                    raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
-
-                template = templates[tipo_documento]
-
-                for campo, descricao in template.items():
-                    question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
-                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
-                    if response and 'answer' in response:
-                        template[campo] = response['answer']
-                    else:
-                        template[campo] = "Informação não encontrada nos documentos fornecidos."
-
-                return template
-
             # Função para preencher um documento com base no seu tipo e retornar os chunks usados
             def preencher_documento_com_chunks(tipo_documento, retrieval_chain_config):
                 inicial_instrução = """
@@ -159,8 +140,9 @@ if uploaded_files:
 
                 for campo, descricao in template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
+                    st.write(f"Pergunta para {campo}: {question}")
                     response = retrieval_chain_config.invoke({"question": question})
-                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
+                    st.write(f"Resposta para {campo}: {response}")  # Verificar a resposta gerada
                     if response and 'answer' in response:
                         template[campo] = response['answer']
                         # Armazenar referências dos documentos usados
