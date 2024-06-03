@@ -157,30 +157,8 @@ if uploaded_files:
                 texto = anonimizar_enderecos(texto)
                 return texto
 
-            # Função para preencher um documento com base no seu tipo
-            def preencher_documento(tipo_documento, retrieval_chain_config):
-                inicial_instrução = """
-                  Considere que todo conteúdo gerado, é para o Ministério público do Estado
-                  da Bahia, logo as referências do documento devem ser para esse órgão.
-                """
-                if tipo_documento not in templates:
-                    raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
-
-                template = templates[tipo_documento]
-
-                for campo, descricao in template.items():
-                    question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
-                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
-                    if response and 'answer' in response:
-                        template[campo] = response['answer']
-                    else:
-                        template[campo] = "Informação não encontrada nos documentos fornecidos."
-
-                return template
-
-            # Função para preencher um documento com base no seu tipo e retornar os chunks usados
-            def preencher_documento_com_chunks(tipo_documento, retrieval_chain_config):
+            # Função para preencher um documento com base no seu tipo e verificar os documentos recuperados
+            def preencher_documento_com_verificacao(tipo_documento, retrieval_chain_config):
                 inicial_instrução = """
                   Considere que todo conteúdo gerado, é para o Ministério público do Estado
                   da Bahia, logo as referências do documento devem ser para esse órgão.
@@ -193,12 +171,16 @@ if uploaded_files:
 
                 for campo, descricao in template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
-                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
+                    response = retrieval_chain_config({"question": question})
+                    st.write(f"Resposta para {campo}:", response['answer'])  # Verificar a resposta gerada
+                    st.write("Documentos Recuperados:")
+                    for i, doc in enumerate(response['source_documents']):
+                        st.markdown(f"**Documento Recuperado {i+1}:**")
+                        st.write(doc.page_content)  # Exibir o conteúdo dos documentos recuperados
                     if response and 'answer' in response:
                         template[campo] = response['answer']
                         # Armazenar referências dos documentos usados
-                        chunk_references[campo] = [doc.page_content for doc in response.get('source_documents', [])]
+                        chunk_references[campo] = [doc.page_content for doc in response['source_documents']]
                     else:
                         template[campo] = "Informação não encontrada nos documentos fornecidos."
                         chunk_references[campo] = []
@@ -230,7 +212,7 @@ if uploaded_files:
 
             if st.button("Preencher Documento"):
                 with st.spinner("Preenchendo documento..."):
-                    documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, retrieval_chain_config)
+                    documento_preenchido, chunk_references = preencher_documento_com_verificacao(tipo_documento, retrieval_chain_config)
                     salvar_documento_docx(tipo_documento, documento_preenchido)
                     st.write("Documento preenchido:", documento_preenchido)
                     st.write("Referências dos chunks utilizados:")
