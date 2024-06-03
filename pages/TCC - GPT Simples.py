@@ -221,6 +221,11 @@ if uploaded_files:
                 doc.save(caminho_docx)
                 st.success(f"{tipo_documento} salvo em {caminho_docx}")
 
+            def listar_documentos_chromadb(db):
+                # Recupera todos os documentos armazenados no ChromaDB
+                documentos = db.get_all_documents()
+                return documentos
+
             tipo_documento = st.selectbox("Selecione o tipo de documento", options=list(templates.keys()))
 
             if st.button("Preencher Documento"):
@@ -234,6 +239,16 @@ if uploaded_files:
                         for i, chunk in enumerate(chunks):
                             st.markdown(f"**Chunk {i+1}:**")
                             st.write(chunk)
+            
+            if st.button("Listar Documentos no ChromaDB"):
+                try:
+                    documentos_armazenados = listar_documentos_chromadb(db)
+                    st.write("Documentos Armazenados no ChromaDB:")
+                    for i, doc in enumerate(documentos_armazenados):
+                        st.markdown(f"**Documento {i+1}:**")
+                        st.write(doc.page_content)
+                except Exception as e:
+                    st.error(f"Erro ao listar documentos: {e}")
 
         except Exception as e:
             st.error(f"Ocorreu um erro ao inicializar o ChromaDB: {e}")
