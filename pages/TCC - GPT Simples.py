@@ -86,7 +86,7 @@ if uploaded_files:
             }
         }
 
-        def preencher_documento_com_chunks(tipo_documento, chunks):
+        def preencher_documento_com_chunks(tipo_documento, chunks, retrieval_chain):
             inicial_instrução = """
               Considere que todo conteúdo gerado é para o Ministério Público do Estado
               da Bahia, logo as referências do documento devem ser para esse órgão.
@@ -99,16 +99,15 @@ if uploaded_files:
 
             for campo, descricao in template.items():
                 question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa: {descricao}."
-                relevant_chunks = [chunk.page_content for chunk in chunks if descricao in chunk.page_content]
-                if relevant_chunks:
-                    response = retrieval_chain({"question": question, "docs": relevant_chunks})
-                    st.write(f"Resposta para {campo}:", response)
-                    if response and 'answer' in response:
-                        template[campo] = response['answer']
-                        chunk_references[campo] = relevant_chunks
-                    else:
-                        template[campo] = "Informação não encontrada nos documentos fornecidos."
-                        chunk_references[campo] = []
+                st.write(f"Question: {question}")
+
+                # Passar todos os chunks diretamente
+                response = retrieval_chain({"question": question, "documents": chunks})
+                st.write(f"Resposta para {campo}:", response)
+
+                if response and 'answer' in response:
+                    template[campo] = response['answer']
+                    chunk_references[campo] = [chunk.page_content for chunk in chunks]
                 else:
                     template[campo] = "Informação não encontrada nos documentos fornecidos."
                     chunk_references[campo] = []
@@ -132,7 +131,7 @@ if uploaded_files:
 
         if st.button("Preencher Documento"):
             with st.spinner("Preenchendo documento..."):
-                documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, st.session_state.chunks)
+                documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, st.session_state.chunks, retrieval_chain)
                 salvar_documento_docx(tipo_documento, documento_preenchido)
                 st.write("Documento preenchido:", documento_preenchido)
                 st.write("Referências dos chunks utilizados:", chunk_references)
