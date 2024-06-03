@@ -101,8 +101,9 @@ if uploaded_files:
                 question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa: {descricao}."
                 st.write(f"Question: {question}")
 
-                # Passar todos os chunks diretamente
-                response = retrieval_chain({"question": question, "documents": chunks})
+                # Concatenar o conteúdo dos chunks em uma string grande para passar para a LLM
+                concatenated_chunks = "\n".join([chunk.page_content for chunk in chunks])
+                response = retrieval_chain({"question": question, "context": concatenated_chunks})
                 st.write(f"Resposta para {campo}:", response)
 
                 if response and 'answer' in response:
