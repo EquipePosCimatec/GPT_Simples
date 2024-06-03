@@ -48,18 +48,19 @@ def read_file(file):
 if uploaded_files:
     documents = []
     # Ler o conteúdo dos arquivos carregados
-    for uploaded_file in uploaded_files:
+    for i, uploaded_file in enumerate(uploaded_files):
         content = read_file(uploaded_file)
         if content:
-            documents.append(content)
+            documents.append(LangDocument(page_content=content, metadata={"document_id": f"doc_{i}"}))
     
     if documents:
-        # Converter conteúdo dos arquivos para objetos LangDocument
-        lang_docs = [LangDocument(page_content=doc) for doc in documents]
-
         # Dividir documentos em chunks
         text_splitter = CharacterTextSplitter(chunk_size=1500, chunk_overlap=0)
-        docs = text_splitter.split_documents(lang_docs)
+        docs = []
+        for doc in documents:
+            chunks = text_splitter.split_text(doc.page_content)
+            for i, chunk in enumerate(chunks):
+                docs.append(LangDocument(page_content=chunk, metadata={"document_id": doc.metadata["document_id"], "chunk_id": i}))
 
         # Verificar os chunks gerados
         st.write("Chunks gerados:")
