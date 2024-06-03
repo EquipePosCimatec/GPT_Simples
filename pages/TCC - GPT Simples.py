@@ -154,7 +154,7 @@ if uploaded_files:
                 return texto
 
             # Função para preencher um documento com base no seu tipo
-            def preencher_documento(tipo_documento, retrieval_chain_config):
+            def preencher_documento(tipo_documento, chunks):
                 inicial_instrução = """
                   Considere que todo conteúdo gerado, é para o Ministério público do Estado
                   da Bahia, logo as referências do documento devem ser para esse órgão.
@@ -166,40 +166,22 @@ if uploaded_files:
 
                 for campo, descricao in template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
-                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
-                    if response and 'answer' in response:
-                        template[campo] = response['answer']
+                    resposta = gerar_resposta(question, chunks)
+                    st.write(f"Resposta para {campo}:", resposta)  # Verificar a resposta gerada
+                    if resposta:
+                        template[campo] = resposta
                     else:
                         template[campo] = "Informação não encontrada nos documentos fornecidos."
 
                 return template
 
-            # Função para preencher um documento com base no seu tipo e retornar os chunks usados
-            def preencher_documento_com_chunks(tipo_documento, retrieval_chain_config):
-                inicial_instrução = """
-                  Considere que todo conteúdo gerado, é para o Ministério público do Estado
-                  da Bahia, logo as referências do documento devem ser para esse órgão.
-                """
-                if tipo_documento not in templates:
-                    raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
-
-                template = templates[tipo_documento]
-                chunk_references = {}
-
-                for campo, descricao in template.items():
-                    question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    response = retrieval_chain_config.invoke({"question": question})
-                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
-                    if response and 'answer' in response:
-                        template[campo] = response['answer']
-                        # Armazenar referências dos documentos usados
-                        chunk_references[campo] = [doc.page_content for doc in response.get('source_documents', [])]
-                    else:
-                        template[campo] = "Informação não encontrada nos documentos fornecidos."
-                        chunk_references[campo] = []
-
-                return template, chunk_references
+            # Função para gerar respostas usando chunks
+            def gerar_resposta(pergunta, chunks):
+                # Simula a resposta baseada nos chunks
+                contexto = "\n\n".join(chunks)
+                prompt = f"Contexto: {contexto}\n\nPergunta: {pergunta}\nResposta:"
+                response = chat_model({"prompt": prompt})
+                return response['choices'][0]['text'].strip()
 
             # Função para salvar documento em formato .docx
             def salvar_documento_docx(tipo_documento, conteudo):
@@ -221,10 +203,10 @@ if uploaded_files:
 
             if st.button("Preencher Documento"):
                 with st.spinner("Preenchendo documento..."):
-                    documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, retrieval_chain_config)
+                    chunks = [doc.page_content for doc in docs]
+                    documento_preenchido = preencher_documento(tipo_documento, chunks)
                     salvar_documento_docx(tipo_documento, documento_preenchido)
                     st.write("Documento preenchido:", documento_preenchido)
-                    st.write("Referências dos chunks utilizados:", chunk_references)
 
         except Exception as e:
             st.error(f"Ocorreu um erro ao inicializar o ChromaDB: {e}")
