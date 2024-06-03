@@ -70,7 +70,7 @@ if uploaded_files:
             st.write(doc.page_content)
 
         # Criar embedder com o modelo da OpenAI
-        embedder = OpenAIEmbeddings(model="text-embedding-3-large")
+        embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
 
         # Verificar embeddings
         embeddings = embedder.embed_documents([doc.page_content for doc in docs])
