@@ -158,6 +158,7 @@ if uploaded_files:
 
                 template = templates[tipo_documento]
                 chunk_references = {}
+                sucesso = True
 
                 for campo, descricao in template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
@@ -168,7 +169,7 @@ if uploaded_files:
                         st.markdown(f"**Chunk {i+1}:**")
                         st.write(chunk.page_content)
 
-                    response = retrieval_chain_config.__call__({"question": question})
+                    response = retrieval_chain_config({"question": question})
                     st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
                     if response and 'answer' in response:
                         template[campo] = response['answer']
@@ -177,8 +178,9 @@ if uploaded_files:
                     else:
                         template[campo] = "Informação não encontrada nos documentos fornecidos."
                         chunk_references[campo] = []
+                        sucesso = False
 
-                return template, chunk_references
+                return template, chunk_references, sucesso
 
             # Função para salvar documento em formato .docx
             def salvar_documento_docx(tipo_documento, conteudo):
@@ -200,15 +202,19 @@ if uploaded_files:
 
             if st.button("Preencher Documento"):
                 with st.spinner("Preenchendo documento..."):
-                    documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, retrieval_chain_config)
-                    salvar_documento_docx(tipo_documento, documento_preenchido)
-                    st.write("Documento preenchido:", documento_preenchido)
-                    st.write("Referências dos chunks utilizados:")
-                    for campo, chunks in chunk_references.items():
-                        st.markdown(f"**{campo}:**")
-                        for i, chunk in enumerate(chunks):
-                            st.markdown(f"**Chunk {i+1}:**")
-                            st.write(chunk)
+                    documento_preenchido, chunk_references, sucesso = preencher_documento_com_chunks(tipo_documento, retrieval_chain_config)
+                    if sucesso:
+                        st.success("Todos os passos foram concluídos com sucesso!")
+                        salvar_documento_docx(tipo_documento, documento_preenchido)
+                        st.write("Documento preenchido:", documento_preenchido)
+                        st.write("Referências dos chunks utilizados:")
+                        for campo, chunks in chunk_references.items():
+                            st.markdown(f"**{campo}:**")
+                            for i, chunk in enumerate(chunks):
+                                st.markdown(f"**Chunk {i+1}:**")
+                                st.write(chunk)
+                    else:
+                        st.error("Nem todos os passos foram concluídos com sucesso. Verifique os campos que não foram preenchidos corretamente.")
 
         except Exception as e:
             st.error(f"Ocorreu um erro ao inicializar o ChromaDB: {e}")
