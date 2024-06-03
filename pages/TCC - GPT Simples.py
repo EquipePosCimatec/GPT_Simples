@@ -187,6 +187,7 @@ if uploaded_files:
                     if chunk_references[campo]:
                         doc.add_heading("Referências dos Chunks", level=3)
                         for chunk in chunk_references[campo]:
+                            # Melhorar a formatação dos chunks
                             doc.add_paragraph(chunk, style='BodyText')
 
                 doc.save(caminho_docx)
@@ -199,7 +200,12 @@ if uploaded_files:
                     documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, retrieval_chain_config)
                     salvar_documento_docx(tipo_documento, documento_preenchido, chunk_references)
                     st.write("Documento preenchido:", documento_preenchido)
-                    st.write("Referências dos chunks utilizados:", chunk_references)
+                    st.write("Referências dos chunks utilizados:")
+                    # Melhorar a formatação dos chunks ao exibir no Streamlit
+                    for campo, chunks in chunk_references.items():
+                        st.write(f"**{campo}:**")
+                        for chunk in chunks:
+                            st.write(f"- {chunk}")
 
         except Exception as e:
             st.error(f"Ocorreu um erro ao inicializar o ChromaDB: {e}")
