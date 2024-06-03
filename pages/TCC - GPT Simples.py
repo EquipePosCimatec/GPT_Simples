@@ -52,8 +52,6 @@ if uploaded_files:
         content = read_file(uploaded_file)
         if content:
             documents.append(content)
-            st.write(f"Conteúdo do arquivo {uploaded_file.name}:")
-            st.write(content)  # Verifique se o conteúdo está correto
     
     if documents:
         # Converter conteúdo dos arquivos para objetos LangDocument
@@ -163,11 +161,22 @@ if uploaded_files:
 
                 for campo, descricao in template.items():
                     question = inicial_instrução + f" Preencha o {campo} que tem por descrição orientativa {descricao}."
-                    st.write(f"Pergunta para {campo}: {question}")
+                    # Recuperar chunks relevantes antes de passar para a LLM
+                    retrieved_chunks = retrieval_chain_config.retriever.get_relevant_documents(question)
+                    st.write(f"Chunks recuperados para {campo}:")
+                    for i, chunk in enumerate(retrieved_chunks):
+                        st.markdown(f"**Chunk {i+1}:**")
+                        st.write(chunk.page_content)
+
                     response = retrieval_chain_config({"question": question})
-                    st.write(f"Resposta para {campo}: {response['answer']}")
-                    template[campo] = response['answer']
-                    chunk_references[campo] = [doc.page_content for doc in response.get('source_documents', [])]
+                    st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
+                    if response and 'answer' in response:
+                        template[campo] = response['answer']
+                        # Armazenar referências dos documentos usados
+                        chunk_references[campo] = [doc.page_content for doc in response.get('source_documents', [])]
+                    else:
+                        template[campo] = "Informação não encontrada nos documentos fornecidos."
+                        chunk_references[campo] = []
 
                 return template, chunk_references
 
