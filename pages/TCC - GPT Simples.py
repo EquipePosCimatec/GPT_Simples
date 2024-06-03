@@ -1,5 +1,5 @@
 import streamlit as st
-from io import StringIO, BytesIO
+from io import BytesIO
 from langchain.schema import Document as LangDocument
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
@@ -62,14 +62,18 @@ if uploaded_files:
         docs = text_splitter.split_documents(lang_docs)
 
         # Verificar os chunks gerados
-        st.write("Chunks gerados:", docs)
+        st.write("Chunks gerados:")
+        for i, doc in enumerate(docs):
+            st.markdown(f"**Chunk {i+1}:**")
+            st.write(doc.page_content)
 
         # Criar embedder com o modelo da OpenAI
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
 
         # Verificar embeddings
         embeddings = embedder.embed_documents([doc.page_content for doc in docs])
-        st.write("Embeddings gerados:", embeddings)
+        st.write("Embeddings gerados:")
+        st.json(embeddings)
 
         try:
             # Criar ChromaDB com documentos e embedder (garantir nova coleção)
@@ -224,7 +228,12 @@ if uploaded_files:
                     documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, retrieval_chain_config)
                     salvar_documento_docx(tipo_documento, documento_preenchido)
                     st.write("Documento preenchido:", documento_preenchido)
-                    st.write("Referências dos chunks utilizados:", chunk_references)
+                    st.write("Referências dos chunks utilizados:")
+                    for campo, chunks in chunk_references.items():
+                        st.markdown(f"**{campo}:**")
+                        for i, chunk in enumerate(chunks):
+                            st.markdown(f"**Chunk {i+1}:**")
+                            st.write(chunk)
 
         except Exception as e:
             st.error(f"Ocorreu um erro ao inicializar o ChromaDB: {e}")
