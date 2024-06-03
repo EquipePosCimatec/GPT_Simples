@@ -104,10 +104,10 @@ if uploaded_files:
                 st.write(f"Question: {question}")
 
                 # Passar o contexto concatenado diretamente para a LLM
-                inputs = {"input": question + "\n\n" + concatenated_chunks}
+                inputs = {"question": question, "context": concatenated_chunks}
                 
                 # Corrigir a chamada para a cadeia de recuperação
-                response = retrieval_chain({"input": inputs["input"]})
+                response = retrieval_chain(inputs)
                 st.write(f"Resposta para {campo}:", response)
 
                 if response and 'output' in response:
