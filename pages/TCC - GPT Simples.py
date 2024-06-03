@@ -79,6 +79,12 @@ if uploaded_files:
             # Criar ChromaDB com documentos e embedder (garantir nova coleção)
             db = Chroma.from_documents(docs, embedder, collection_name="document_collection_new")
             
+            # Verificar documentos inseridos no Chroma
+            document_list = db.get()
+            st.write("Documentos inseridos no Chroma:")
+            for doc in document_list:
+                st.write(doc)
+
             # Configurar o modelo de chat com GPT-4 e memória de conversação
             chat_model = ChatOpenAI(temperature=0.1, model_name="gpt-4-turbo")
             memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
@@ -167,6 +173,8 @@ if uploaded_files:
                     for i, chunk in enumerate(retrieved_chunks):
                         st.markdown(f"**Chunk {i+1}:**")
                         st.write(chunk.page_content)
+                        # Verificar de qual documento o chunk foi recuperado
+                        st.write(f"Documento original: {chunk.metadata.get('document_id')}")
 
                     response = retrieval_chain_config({"question": question})
                     st.write(f"Resposta para {campo}:", response)  # Verificar a resposta gerada
@@ -184,7 +192,7 @@ if uploaded_files:
             def salvar_documento_docx(tipo_documento, conteudo):
                 # Salvar em um diretório local acessível
                 caminho_docx = f"./artefatos/{tipo_documento}.docx"
-                os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
+                os.makedirs(os.path.dirname(caminho_docx), existindo=True)
                 doc = Document()
 
                 doc.add_heading(tipo_documento, level=1)
