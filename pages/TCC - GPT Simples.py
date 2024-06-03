@@ -143,8 +143,8 @@ if uploaded_files:
             # Simula a resposta baseada nos chunks
             contexto = "\n\n".join(chunks)
             prompt = f"Contexto: {contexto}\n\nPergunta: {pergunta}\nResposta:"
-            response = chat_model.generate([prompt])
-            return response.generations[0][0].text.strip()
+            response = chat_model([{"role": "user", "content": prompt}])
+            return response.choices[0].message["content"].strip()
 
         # Função para salvar documento em formato .docx
         def salvar_documento_docx(tipo_documento, conteudo):
@@ -166,6 +166,7 @@ if uploaded_files:
 
         if st.button("Preencher Documento"):
             with st.spinner("Preenchendo documento..."):
+                chunks = [anonimizar_texto(chunk) for chunk in chunks]  # Anonimizar texto dos chunks
                 documento_preenchido = preencher_documento(tipo_documento, chunks)
                 salvar_documento_docx(tipo_documento, documento_preenchido)
                 st.write("Documento preenchido:", documento_preenchido)
