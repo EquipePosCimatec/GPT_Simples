@@ -103,7 +103,10 @@ if uploaded_files:
 
                 # Concatenar o conteúdo dos chunks em uma string grande para passar para a LLM
                 concatenated_chunks = "\n".join([chunk.page_content for chunk in chunks])
-                response = retrieval_chain({"question": question, "context": concatenated_chunks})
+                inputs = {"question": question, "context": concatenated_chunks}
+                
+                # Corrigir a chamada para a cadeia de recuperação
+                response = retrieval_chain.invoke(inputs)
                 st.write(f"Resposta para {campo}:", response)
 
                 if response and 'answer' in response:
