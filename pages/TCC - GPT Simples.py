@@ -107,7 +107,7 @@ if uploaded_files:
                 inputs = {"input": question + "\n\n" + concatenated_chunks}
                 
                 # Corrigir a chamada para a cadeia de recuperação
-                response = retrieval_chain(inputs)
+                response = retrieval_chain({"input": inputs["input"]})
                 st.write(f"Resposta para {campo}:", response)
 
                 if response and 'output' in response:
