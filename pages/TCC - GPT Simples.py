@@ -92,42 +92,12 @@ if uploaded_files:
                 "ETP": {
                     "1. DESCRIÇÃO DA NECESSIDADE DA CONTRATAÇÃO": "Este item visa clarificar o problema ou a deficiência...",
                     "2. PREVISÃO DA CONTRATAÇÃO NO PLANO DE CONTRATAÇÕES ANUAL – PCA": "Indique a inclusão desta contratação...",
-                    #"3. DESCRIÇÃO DOS REQUISITOS DA CONTRATAÇÃO": "Especifique todos os requisitos técnicos e de desempenho necessários...",
-                    #"4. ESTIMATIVAS DAS QUANTIDADES PARA A CONTRATAÇÃO": "Baseando-se em consumo real e projeções futuras...",
-                    #"5. LEVANTAMENTO DE MERCADO": "Realize uma pesquisa comparativa de mercado...",
-                    #"6. ESTIMATIVA DO VALOR DA CONTRATAÇÃO": "Informe a estimativa do valor total e unitário da contratação...",
-                    #"7. DESCRIÇÃO DA SOLUÇÃO": "Descreva a solução escolhida de forma abrangente...",
-                    #"8. PARCELAMENTO OU NÃO DA SOLUÇÃO": "Discuta se a solução será parcelada ou adquirida integralmente...",
-                    #"9. RESULTADOS PRETENDIDOS COM A CONTRATAÇÃO": "Defina os benefícios diretos e indiretos esperados...",
-                    #"10. PROVIDÊNCIAS A SEREM ADOTADAS PELA ADMINISTRAÇÃO PREVIAMENTE À CONTRATAÇÃO": "Identifique quaisquer ações necessárias...",
-                    #"11. CONTRATAÇÕES CORRELATAS E/OU INTERDEPENDENTES": "Liste quaisquer contratações relacionadas...",
-                    #"12. POSSÍVEIS IMPACTOS AMBIENTAIS": "Analise os impactos ambientais da contratação...",
                     "13. POSICIONAMENTO CONCLUSIVO SOBRE A CONTRATAÇÃO": "Forneça uma declaração final sobre a viabilidade..."
                 },
                 "TR": {
                     "1. OBJETO": "1 Aquisição de [inserir o objeto]...",
                     "1.1.2 PARCELAMENTO DA CONTRATAÇÃO": "REALIZADA EM ÚNICO ITEM...",
-                    "1.1.3 INDICAÇÃO DE MARCAS OU MODELOS": "NÃO SE APLICA / EXCLUSIVIDADE DE MARCA/MODELO...",
-                    "1.1.4 A VEDAÇÃO DE CONTRATAÇÃO DE MARCA OU PRODUTO": "NÃO SE APLICA / SE APLICA",
-                    "1.2 NATUREZA DO OBJETO": "NATUREZA COMUM / NATUREZA ESPECIAL",
-                    "1.3 ENQUADRAMENTO, VIGÊNCIA E FORMALIZAÇÃO DA CONTRATAÇÃO": "NÃO CONTINUADO / CONTINUADO",
-                    "1.3.2 PRAZO DE VIGÊNCIA": "",
-                    "1.3.3 FORMALIZAÇÃO DA CONTRATAÇÃO": "HAVERÁ SOMENTE EMISSÃO DE INSTRUMENTO SUBSTITUTIVO...",
-                    "2. FUNDAMENTAÇÃO DA CONTRATAÇÃO": "",
-                    "3. DESCRIÇÃO DA SOLUÇÃO": "",
-                    "4. REQUISITOS DA CONTRATAÇÃO": "",
-                    "4.1.1 SUSTENTABILIDADE": "APLICAM-SE CRITÉRIOS DE SUSTENTABILIDADE...",
-                    "4.1.2 SUBCONTRATAÇÃO": "NÃO SERÁ ADMITIDA A SUBCONTRATAÇÃO...",
-                    "4.1.3 - GARANTIAS": "",
-                    "4.1.3.1 GARANTIA DA EXECUÇÃO CONTRATUAL": "NÃO SERÁ EXIGIDA GARANTIA CONTRATUAL...",
                     "4.1.3.2 GARANTIA DO PRODUTO, CONDIÇÕES DE MANUTENÇÃO E ASSISTÊNCIA TÉCNICA": "NÃO SE APLICA...",
-                    "5. MODELO DE EXECUÇÃO DO OBJETO": "",
-                    "5.1 PRAZO PARA RETIRADA DO EMPENHO": "",
-                    "5.2 PRAZO E FORMA DE ENTREGA": "",
-                    "5.4 RECEBIMENTO DO OBJETO": "",
-                    "5.4.1 RECEBIMENTO PROVISÓRIO": "",
-                    "5.4.2 RECEBIMENTO DEFINITIVO": "",
-                    "5.4.3 DEMAIS REGRAMENTOS": ""
                 }
             }
 
@@ -156,7 +126,7 @@ if uploaded_files:
             # Função para preencher um documento com base no seu tipo
             def preencher_documento(tipo_documento, retrieval_chain_config):
                 inicial_instrução = """
-                  Considere que todo conteúdo gerado, é para o Ministério público do Estado
+                  Considere que todo conteúdo gerado é para o Ministério Público do Estado
                   da Bahia, logo as referências do documento devem ser para esse órgão.
                 """
                 if tipo_documento not in templates:
@@ -178,7 +148,7 @@ if uploaded_files:
             # Função para preencher um documento com base no seu tipo e retornar os chunks usados
             def preencher_documento_com_chunks(tipo_documento, retrieval_chain_config):
                 inicial_instrução = """
-                  Considere que todo conteúdo gerado, é para o Ministério público do Estado
+                  Considere que todo conteúdo gerado é para o Ministério Público do Estado
                   da Bahia, logo as referências do documento devem ser para esse órgão.
                 """
                 if tipo_documento not in templates:
@@ -202,7 +172,7 @@ if uploaded_files:
                 return template, chunk_references
 
             # Função para salvar documento em formato .docx
-            def salvar_documento_docx(tipo_documento, conteudo):
+            def salvar_documento_docx(tipo_documento, conteudo, chunk_references):
                 # Salvar em um diretório local acessível
                 caminho_docx = f"./artefatos/{tipo_documento}.docx"
                 os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
@@ -213,6 +183,11 @@ if uploaded_files:
                 for campo, resposta in conteudo.items():
                     doc.add_heading(campo, level=2)
                     doc.add_paragraph(resposta, style='BodyText')
+                    # Adicionar referências dos chunks utilizados
+                    if chunk_references[campo]:
+                        doc.add_heading("Referências dos Chunks", level=3)
+                        for chunk in chunk_references[campo]:
+                            doc.add_paragraph(chunk, style='BodyText')
 
                 doc.save(caminho_docx)
                 st.success(f"{tipo_documento} salvo em {caminho_docx}")
@@ -222,7 +197,7 @@ if uploaded_files:
             if st.button("Preencher Documento"):
                 with st.spinner("Preenchendo documento..."):
                     documento_preenchido, chunk_references = preencher_documento_com_chunks(tipo_documento, retrieval_chain_config)
-                    salvar_documento_docx(tipo_documento, documento_preenchido)
+                    salvar_documento_docx(tipo_documento, documento_preenchido, chunk_references)
                     st.write("Documento preenchido:", documento_preenchido)
                     st.write("Referências dos chunks utilizados:", chunk_references)
 
