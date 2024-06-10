@@ -4,11 +4,11 @@ import streamlit as st
 from docx import Document as DocxDocument
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-from langchain_openai import ChatOpenAI
+from openai import ChatCompletion
 
 # Função para salvar documento em formato .docx no PC do usuário
 def salvar_documento_docx(tipo_documento, conteudo):
@@ -160,12 +160,12 @@ def iniciar_processo():
     docs = text_splitter.split_documents(documentos)
 
     # Set the API key as an environment variable
-    os.environ["OPENAI_API_KEY"] = KEY
+    os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
     
-    embedder = OpenAIEmbeddings(model="text-embedding-3-large")
+    embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
     db = Chroma.from_documents(docs, embedder)
     
-    chat_model = ChatOpenAI(temperature=0.5, model_name="gpt-4o")
+    chat_model = ChatOpenAI(temperature=0.5, model_name="gpt-4")
     memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
     retrieval_chain_config = reinicializar_chain()
     
