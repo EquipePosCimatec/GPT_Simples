@@ -181,7 +181,7 @@ def gerar_documento(tipo_documento_selecionado):
         )
 
 # Interface do Streamlit
-st.title("Gerador de Artefatos de Licitação do MPBA")
+st.subheader("Gerador de Artefatos de Licitação do MPBA")
 
 documentos_carregados = iniciar_processo()
 
