@@ -10,8 +10,8 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
 
-# Inicializar a variável global db
-db = None
+# Inicializar a variável global db_path
+db_path = "/tmp/chroma_db"
 
 # Função para salvar documento em formato .docx no PC do usuário
 def salvar_documento_docx(tipo_documento, conteudo):
@@ -79,12 +79,28 @@ templates = {
     }
 }
 
-# Função para reiniciar o Chroma DB
-def reiniciar_chroma():
-    global db
-    if db:
-        db.delete()  # Apaga todos os documentos do DB atual
-    db = None  # Limpa o DB atual
+# Função para limpar o banco de dados Chroma
+def limpar_chroma_db(db_path):
+    if os.path.exists(db_path):
+        os.remove(db_path)
+        print(f"Banco de dados Chroma em '{db_path}' foi excluído.")
+    else:
+        print(f"Banco de dados Chroma em '{db_path}' não encontrado.")
+
+# Função para carregar novos documentos e recriar o banco de dados Chroma
+def recriar_chroma_db(documents, db_path, embedder):
+    # Limpar o banco de dados existente
+    limpar_chroma_db(db_path)
+    
+    # Dividir documentos em chunks
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=50)
+    docs = text_splitter.split_documents(documents)
+    
+    # Criar e carregar o banco de dados Chroma
+    db = Chroma.from_documents(docs, embedder, persist_directory=db_path)
+    num_docs = len(db.get())
+    print(f"Número de documentos no Chroma DB: {num_docs}")
+    return db
 
 # Função genérica para preencher documentos
 def preencher_documento(tipo_documento, retrieval_chain_config):
@@ -123,18 +139,14 @@ def iniciar_processo():
     documentos = []
     file_paths = st.file_uploader("Selecione os arquivos que deseja processar", accept_multiple_files=True, key="file_uploader")
     if file_paths:
-        reiniciar_chroma()  # Reinicia o Chroma DB ao iniciar o processo
         for file in file_paths:
             documentos.extend(carregar_arquivo(file))
-
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=50)
-        docs = text_splitter.split_documents(documentos)
 
         # Set the API key as an environment variable
         os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
         
         embedder = OpenAIEmbeddings(model="text-embedding-3-large")
-        db = Chroma.from_documents(docs, embedder)
+        db = recriar_chroma_db(documentos, db_path, embedder)
         
         chat_model = ChatOpenAI(temperature=0.5 , model_name="gpt-4o")
         memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
@@ -157,7 +169,8 @@ def gerar_documento(tipo_documento_selecionado):
             file_name=os.path.basename(caminho_salvo),
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
-    reiniciar_chroma()  # Reinicia o Chroma DB após o download do arquivo
+    # Limpar o Chroma DB após o download do arquivo
+    limpar_chroma_db(db_path)
 
 # Interface do Streamlit
 st.title("Gerador de Artefatos de Licitação do MPBA")
