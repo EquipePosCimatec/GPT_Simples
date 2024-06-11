@@ -160,10 +160,10 @@ def iniciar_processo():
     # Set the API key as an environment variable
     os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
     
-    embedder = OpenAIEmbeddings()
+    embedder = OpenAIEmbeddings(model="text-embedding-3-large")
     db = Chroma.from_documents(docs, embedder)
     
-    chat_model = ChatOpenAI(temperature=0.5 , model_name="gpt-4")
+    chat_model = ChatOpenAI(temperature=0.5 , model_name="gpt-4o")
     memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
     retrieval_chain_config = reinicializar_chain()
     
