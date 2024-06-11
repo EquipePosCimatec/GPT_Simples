@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import streamlit as st
 from docx import Document as DocxDocument
 from langchain.schema import Document
@@ -82,7 +83,7 @@ templates = {
 # Função para limpar o banco de dados Chroma
 def limpar_chroma_db(db_path):
     if os.path.exists(db_path):
-        os.remove(db_path)
+        shutil.rmtree(db_path)
         print(f"Banco de dados Chroma em '{db_path}' foi excluído.")
     else:
         print(f"Banco de dados Chroma em '{db_path}' não encontrado.")
