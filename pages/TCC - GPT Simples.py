@@ -112,6 +112,8 @@ templates = {
 # Função para reiniciar o Chroma DB
 def reiniciar_chroma():
     global db
+    if db:
+        db.delete()  # Apaga todos os documentos do DB atual
     db = None  # Limpa o DB atual
 
 # Função genérica para preencher documentos
@@ -149,9 +151,9 @@ def salvar_documento(tipo_documento, conteudo):
 def iniciar_processo():
     global retrieval_chain_config, chat_model, db, documentos
     documentos = []
-    reiniciar_chroma()  # Reinicia o Chroma DB ao iniciar o processo
     file_paths = st.file_uploader("Selecione os arquivos que deseja processar", accept_multiple_files=True, key="file_uploader")
     if file_paths:
+        reiniciar_chroma()  # Reinicia o Chroma DB ao iniciar o processo
         for file in file_paths:
             documentos.extend(carregar_arquivo(file))
 
