@@ -143,7 +143,7 @@ def iniciar_processo():
     documentos = []
     file_paths = st.file_uploader("Selecione os arquivos que deseja processar", accept_multiple_files=True, key="file_uploader")
     if file_paths:
-        for file em file_paths:
+        for file in file_paths:
             documentos.extend(carregar_arquivo(file))
 
         # Set the API key as an environment variable
