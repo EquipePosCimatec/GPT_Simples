@@ -10,6 +10,9 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
 
+# Inicializar a variável global db
+db = None
+
 # Função para salvar documento em formato .docx no PC do usuário
 def salvar_documento_docx(tipo_documento, conteudo):
     caminho_docx = os.path.join("/tmp", f"{tipo_documento}.docx")
@@ -145,7 +148,7 @@ def preencher_sequencia_documentos(retrieval_chain_config, tipo_documento_seleci
 
 # Função para salvar o documento em ambos os formatos e atualizar o Chroma DB
 def salvar_documento(tipo_documento, conteudo):
-    conteudo_anonimizado = {campo: anonimizar_texto(resposta) for campo, resposta in conteudo.items()}
+    conteudo_anonimizado = {campo: anonimizar_texto(resposta) for campo, resposta em conteudo.items()}
     return salvar_documento_docx(tipo_documento, conteudo_anonimizado)
 
 def iniciar_processo():
