@@ -27,16 +27,16 @@ def salvar_documento_docx(tipo_documento, conteudo):
     return caminho_docx
 
 # Função para carregar um arquivo de texto com diferentes tentativas de codificação
-def carregar_arquivo(file_path):
+def carregar_arquivo(file):
     codificacoes = ['utf-8', 'latin-1', 'cp1252']
     for encoding in codificacoes:
         try:
-            with open(file_path, 'r', encoding=encoding) as f:
-                text = f.read()
+            file.seek(0)
+            text = file.read().decode(encoding)
             return [Document(page_content=text)]
         except UnicodeDecodeError:
             continue
-    raise RuntimeError(f"Não foi possível carregar o arquivo: {file_path} com as codificações {codificacoes}")
+    raise RuntimeError(f"Não foi possível carregar o arquivo com as codificações {codificacoes}")
 
 # Função para reinicializar o chain com a memória reseta
 def reinicializar_chain():
@@ -148,8 +148,8 @@ def iniciar_processo():
     documentos = []
     file_paths = st.file_uploader("Selecione os arquivos que deseja processar", accept_multiple_files=True)
     if file_paths:
-        for file_path in file_paths:
-            documentos.extend(carregar_arquivo(file_path))
+        for file in file_paths:
+            documentos.extend(carregar_arquivo(file))
 
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=50)
         docs = text_splitter.split_documents(documentos)
@@ -165,7 +165,7 @@ def iniciar_processo():
         retrieval_chain_config = reinicializar_chain()
         
         st.success("Documentos carregados e processados com sucesso.")
-        st.write("Arquivos carregados:", file_paths)
+        st.write("Arquivos carregados:", [file.name for file in file_paths])
         return True
     return False
 
