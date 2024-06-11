@@ -170,6 +170,7 @@ def iniciar_processo():
     st.success("Documentos carregados e processados com sucesso.")
 
 def gerar_documento():
+    global retrieval_chain_config
     tipo_documento_selecionado = st.selectbox("Selecione o tipo de documento", list(templates.keys()))
     if not tipo_documento_selecionado:
         st.warning("Nenhum tipo de documento selecionado.")
