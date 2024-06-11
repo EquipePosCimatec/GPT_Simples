@@ -120,7 +120,7 @@ def preencher_documento(tipo_documento, retrieval_chain_config):
 
     template = templates[tipo_documento]
 
-    for campo, descricao em template.items():
+    for campo, descricao in template.items():
         question = inicial_instrução + f" Preencha o campo '{campo}' de acordo com a seguinte descrição orientativa: {descricao}. Certifique-se de que o preenchimento esteja em conformidade com a Lei 14.133/2021 e as diretrizes do Ministério Público do Estado da Bahia."
         response = retrieval_chain_config.invoke({"question": question})
         template[campo] = response['answer']
