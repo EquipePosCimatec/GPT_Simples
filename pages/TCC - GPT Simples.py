@@ -109,6 +109,11 @@ templates = {
     }
 }
 
+# Função para reiniciar o Chroma DB
+def reiniciar_chroma():
+    global db
+    db = None  # Limpa o DB atual
+
 # Função genérica para preencher documentos
 def preencher_documento(tipo_documento, retrieval_chain_config):
     inicial_instrução = """
@@ -144,6 +149,7 @@ def salvar_documento(tipo_documento, conteudo):
 def iniciar_processo():
     global retrieval_chain_config, chat_model, db, documentos
     documentos = []
+    reiniciar_chroma()  # Reinicia o Chroma DB ao iniciar o processo
     file_paths = st.file_uploader("Selecione os arquivos que deseja processar", accept_multiple_files=True, key="file_uploader")
     if file_paths:
         for file in file_paths:
@@ -179,6 +185,7 @@ def gerar_documento(tipo_documento_selecionado):
             file_name=os.path.basename(caminho_salvo),
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
+    reiniciar_chroma()  # Reinicia o Chroma DB após o download do arquivo
 
 # Interface do Streamlit
 st.title("Gerador de Artefatos de Licitação do MPBA")
