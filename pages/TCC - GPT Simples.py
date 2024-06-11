@@ -21,7 +21,7 @@ def salvar_documento_docx(tipo_documento, conteudo):
 
     doc.add_heading(tipo_documento, level=1)
 
-    for campo, resposta in conteudo.items():
+    for campo, resposta em conteudo.items():
         doc.add_heading(campo, level=2)
         doc.add_paragraph(resposta, style='Normal')
 
@@ -93,6 +93,9 @@ def recriar_chroma_db(documents, db_path, embedder):
     # Limpar o banco de dados existente
     limpar_chroma_db(db_path)
     
+    # Criar diretório se não existir
+    os.makedirs(db_path, exist_ok=True)
+
     # Dividir documentos em chunks
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=50)
     docs = text_splitter.split_documents(documents)
@@ -112,12 +115,12 @@ def preencher_documento(tipo_documento, retrieval_chain_config):
     e outros normativos relevantes para licitações e contratos administrativos.
     As referências devem ser contextualizadas para o MPBA e suas necessidades específicas.
     """
-    if tipo_documento not in templates:
+    if tipo_documento não em templates:
         raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
 
     template = templates[tipo_documento]
 
-    for campo, descricao in template.items():
+    for campo, descricao em template.items():
         question = inicial_instrução + f" Preencha o campo '{campo}' de acordo com a seguinte descrição orientativa: {descricao}. Certifique-se de que o preenchimento esteja em conformidade com a Lei 14.133/2021 e as diretrizes do Ministério Público do Estado da Bahia."
         response = retrieval_chain_config.invoke({"question": question})
         template[campo] = response['answer']
@@ -132,7 +135,7 @@ def preencher_sequencia_documentos(retrieval_chain_config, tipo_documento_seleci
 
 # Função para salvar o documento em ambos os formatos e atualizar o Chroma DB
 def salvar_documento(tipo_documento, conteudo):
-    conteudo_anonimizado = {campo: anonimizar_texto(resposta) for campo, resposta in conteudo.items()}
+    conteudo_anonimizado = {campo: anonimizar_texto(resposta) para campo, resposta em conteudo.items()}
     return salvar_documento_docx(tipo_documento, conteudo_anonimizado)
 
 def iniciar_processo():
@@ -140,7 +143,7 @@ def iniciar_processo():
     documentos = []
     file_paths = st.file_uploader("Selecione os arquivos que deseja processar", accept_multiple_files=True, key="file_uploader")
     if file_paths:
-        for file in file_paths:
+        for file em file_paths:
             documentos.extend(carregar_arquivo(file))
 
         # Set the API key as an environment variable
@@ -154,7 +157,7 @@ def iniciar_processo():
         retrieval_chain_config = reinicializar_chain()
         
         st.success("Documentos carregados e processados com sucesso.")
-        st.write("Arquivos carregados:", [file.name for file in file_paths])
+        st.write("Arquivos carregados:", [file.name para file em file_paths])
         return True
     return False
 
