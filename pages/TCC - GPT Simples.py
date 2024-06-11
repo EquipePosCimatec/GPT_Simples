@@ -146,7 +146,7 @@ def salvar_documento(tipo_documento, conteudo):
 def iniciar_processo():
     global retrieval_chain_config, chat_model, db, documentos
     documentos = []
-    file_paths = st.file_uploader("Selecione os arquivos que deseja processar", accept_multiple_files=True)
+    file_paths = st.file_uploader("Selecione os arquivos que deseja processar", accept_multiple_files=True, key="file_uploader")
     if file_paths:
         for file in file_paths:
             documentos.extend(carregar_arquivo(file))
@@ -171,7 +171,7 @@ def iniciar_processo():
 
 def gerar_documento():
     global retrieval_chain_config
-    tipo_documento_selecionado = st.selectbox("Selecione o tipo de documento", list(templates.keys()))
+    tipo_documento_selecionado = st.selectbox("Selecione o tipo de documento", list(templates.keys()), key="select_tipo_documento")
     if not tipo_documento_selecionado:
         st.warning("Nenhum tipo de documento selecionado.")
         return
@@ -192,6 +192,5 @@ st.title("Gerador de Artefatos de Licitação do MPBA")
 documentos_carregados = iniciar_processo()
 
 if documentos_carregados:
-    tipo_documento_selecionado = st.selectbox("Selecione o tipo de documento", list(templates.keys()))
-    if st.button("Gerar Documento"):
+    if st.button("Gerar Documento", key="button_gerar_documento"):
         gerar_documento()
