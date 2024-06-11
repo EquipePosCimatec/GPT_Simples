@@ -157,7 +157,7 @@ def iniciar_processo():
         retrieval_chain_config = reinicializar_chain()
         
         st.success("Documentos carregados e processados com sucesso.")
-        st.write("Arquivos carregados:", [file.name para file em file_paths])
+        st.write("Arquivos carregados:", [file.name for file in file_paths])
         return True
     return False
 
