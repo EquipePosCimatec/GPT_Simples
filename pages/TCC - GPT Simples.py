@@ -115,7 +115,7 @@ def preencher_documento(tipo_documento, retrieval_chain_config):
     e outros normativos relevantes para licitações e contratos administrativos.
     As referências devem ser contextualizadas para o MPBA e suas necessidades específicas.
     """
-    if tipo_documento não em templates:
+    if tipo_documento não in templates:
         raise ValueError(f"Tipo de documento {tipo_documento} não é suportado.")
 
     template = templates[tipo_documento]
