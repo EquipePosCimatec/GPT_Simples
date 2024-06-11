@@ -135,7 +135,7 @@ def preencher_sequencia_documentos(retrieval_chain_config, tipo_documento_seleci
 
 # Função para salvar o documento em ambos os formatos e atualizar o Chroma DB
 def salvar_documento(tipo_documento, conteudo):
-    conteudo_anonimizado = {campo: anonimizar_texto(resposta) para campo, resposta em conteudo.items()}
+    conteudo_anonimizado = {campo: anonimizar_texto(resposta) for campo, resposta in conteudo.items()}
     return salvar_documento_docx(tipo_documento, conteudo_anonimizado)
 
 def iniciar_processo():
