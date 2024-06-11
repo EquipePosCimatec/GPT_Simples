@@ -9,12 +9,11 @@ from langchain.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
+import base64
 
 # Função para salvar documento em formato .docx no PC do usuário
 def salvar_documento_docx(tipo_documento, conteudo):
-    user_home = os.path.expanduser("~")
-    caminho_docx = os.path.join(user_home, "Downloads", "Artefatos", f"{tipo_documento}.docx")
-    os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
+    caminho_docx = os.path.join("/tmp", f"{tipo_documento}.docx")
     doc = DocxDocument()
 
     doc.add_heading(tipo_documento, level=1)
@@ -169,19 +168,20 @@ def iniciar_processo():
         return True
     return False
 
-def gerar_documento():
+def gerar_documento(tipo_documento_selecionado):
     global retrieval_chain_config
-    tipo_documento_selecionado = st.selectbox("Selecione o tipo de documento", list(templates.keys()), key="select_tipo_documento")
-    if not tipo_documento_selecionado:
-        st.warning("Nenhum tipo de documento selecionado.")
-        return
-
     st.info("Gerando documento, por favor aguarde...")
 
     try:
         caminho_salvo = preencher_sequencia_documentos(retrieval_chain_config, tipo_documento_selecionado)
-        st.success(f"Documento gerado com sucesso. Clique no caminho abaixo para ser direcionado à pasta onde o arquivo foi salvo.")
-        st.write(caminho_salvo)
+        st.success(f"Documento gerado com sucesso. Clique no link abaixo para baixar o arquivo.")
+        with open(caminho_salvo, "rb") as file:
+            btn = st.download_button(
+                label="Baixar Documento",
+                data=file,
+                file_name=os.path.basename(caminho_salvo),
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
         
     except Exception as e:
         st.error(f"Erro ao gerar documento: {str(e)}")
@@ -192,5 +192,6 @@ st.title("Gerador de Artefatos de Licitação do MPBA")
 documentos_carregados = iniciar_processo()
 
 if documentos_carregados:
+    tipo_documento_selecionado = st.selectbox("Selecione o tipo de documento", list(templates.keys()), key="select_tipo_documento")
     if st.button("Gerar Documento", key="button_gerar_documento"):
-        gerar_documento()
+        gerar_documento(tipo_documento_selecionado)
