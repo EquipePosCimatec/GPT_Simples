@@ -4,11 +4,11 @@ import streamlit as st
 from docx import Document as DocxDocument
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-from openai import ChatCompletion
+from langchain_openai import ChatOpenAI
 
 # Função para salvar documento em formato .docx no PC do usuário
 def salvar_documento_docx(tipo_documento, conteudo):
@@ -24,7 +24,6 @@ def salvar_documento_docx(tipo_documento, conteudo):
         doc.add_paragraph(resposta, style='Normal')
 
     doc.save(caminho_docx)
-    print(f"{tipo_documento} salvo em {caminho_docx}")
     return caminho_docx
 
 # Função para carregar um arquivo de texto com diferentes tentativas de codificação
@@ -131,7 +130,6 @@ def preencher_documento(tipo_documento, retrieval_chain_config):
         response = retrieval_chain_config.invoke({"question": question})
         template[campo] = response['answer']
 
-    print(f"RESPOSTA INTEGRAL para {tipo_documento}:", template)
     return template
 
 # Função para preencher a sequência de documentos
@@ -162,10 +160,10 @@ def iniciar_processo():
     # Set the API key as an environment variable
     os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
     
-    embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
+    embedder = OpenAIEmbeddings()
     db = Chroma.from_documents(docs, embedder)
     
-    chat_model = ChatOpenAI(temperature=0.5, model_name="gpt-4")
+    chat_model = ChatOpenAI(temperature=0.5 , model_name="gpt-4")
     memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
     retrieval_chain_config = reinicializar_chain()
     
