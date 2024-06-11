@@ -21,7 +21,7 @@ def salvar_documento_docx(tipo_documento, conteudo):
 
     doc.add_heading(tipo_documento, level=1)
 
-    for campo, resposta em conteudo.items():
+    for campo, resposta in conteudo.items():
         doc.add_heading(campo, level=2)
         doc.add_paragraph(resposta, style='Normal')
 
