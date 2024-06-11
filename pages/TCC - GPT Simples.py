@@ -147,29 +147,27 @@ def iniciar_processo():
     global retrieval_chain_config, chat_model, db, documentos
     documentos = []
     file_paths = st.file_uploader("Selecione os arquivos que deseja processar", accept_multiple_files=True)
-    if not file_paths:
-        st.warning("Nenhum arquivo selecionado.")
-        return
-    
-    for file_path in file_paths:
-        documentos.extend(carregar_arquivo(file_path))
+    if file_paths:
+        for file_path in file_paths:
+            documentos.extend(carregar_arquivo(file_path))
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=50)
-    docs = text_splitter.split_documents(documentos)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=50)
+        docs = text_splitter.split_documents(documentos)
 
-    # Set the API key as an environment variable
-    os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
-    
-    embedder = OpenAIEmbeddings(model="text-embedding-3-large")
-    db = Chroma.from_documents(docs, embedder)
-    
-    chat_model = ChatOpenAI(temperature=0.5 , model_name="gpt-4o")
-    memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
-    retrieval_chain_config = reinicializar_chain()
-    
-    st.success("Documentos carregados e processados com sucesso.")
-    st.write("Arquivos carregados:", file_paths)
-    return True
+        # Set the API key as an environment variable
+        os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
+        
+        embedder = OpenAIEmbeddings(model="text-embedding-3-large")
+        db = Chroma.from_documents(docs, embedder)
+        
+        chat_model = ChatOpenAI(temperature=0.5 , model_name="gpt-4o")
+        memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+        retrieval_chain_config = reinicializar_chain()
+        
+        st.success("Documentos carregados e processados com sucesso.")
+        st.write("Arquivos carregados:", file_paths)
+        return True
+    return False
 
 def gerar_documento():
     global retrieval_chain_config
@@ -191,8 +189,9 @@ def gerar_documento():
 # Interface do Streamlit
 st.title("Gerador de Artefatos de Licitação do MPBA")
 
-if st.button("1. Selecione os seus documentos"):
-    if iniciar_processo():
-        tipo_documento_selecionado = st.selectbox("Selecione o tipo de documento", list(templates.keys()))
-        if st.button("Gerar Documento"):
-            gerar_documento()
+documentos_carregados = iniciar_processo()
+
+if documentos_carregados:
+    tipo_documento_selecionado = st.selectbox("Selecione o tipo de documento", list(templates.keys()))
+    if st.button("Gerar Documento"):
+        gerar_documento()
