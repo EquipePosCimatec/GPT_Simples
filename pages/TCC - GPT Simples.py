@@ -10,7 +10,6 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import Chroma
-import Chromadb
 
 # Função para salvar documento em formato .docx no PC do usuário
 def salvar_documento_docx(tipo_documento, conteudo):
