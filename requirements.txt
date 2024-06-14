@@ -9,3 +9,4 @@ pysqlite3-binary
 langchain-community
 tiktoken
 langchain_openai
+langchain-chroma
