@@ -1,7 +1,6 @@
 import os
 import re
 import streamlit as st
-import chromadb
 from docx import Document as DocxDocument
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
