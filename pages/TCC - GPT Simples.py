@@ -1,11 +1,6 @@
+__import__('pysqlite3')
 import sys
-
-# Verificar e configurar o pysqlite3
-try:
-    import pysqlite3
-    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-except ImportError:
-    pass
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 import os
 import re
@@ -39,14 +34,14 @@ def salvar_documento_docx(tipo_documento, conteudo):
     base_dir = os.path.join(user_home, "Downloads", "Artefatos")
     base_filename = f"{tipo_documento}.docx"
     caminho_docx = os.path.join(base_dir, base_filename)
-    
+
     if os.path.exists(caminho_docx):
         i = 1
         while os.path.exists(caminho_docx):
             base_filename = f"{tipo_documento} ({i}).docx"
             caminho_docx = os.path.join(base_dir, base_filename)
             i += 1
-    
+
     os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
     doc = DocxDocument()
 
@@ -176,7 +171,7 @@ def iniciar_processo(uploaded_files):
 
         os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
 
-        embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
+        embedder = OpenAIEmbeddings(model="text-embedding-3-large")
 
         # Configuração manual do cliente Chroma
         chroma_settings = Settings(anonymized_telemetry=False)
