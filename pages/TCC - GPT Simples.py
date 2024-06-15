@@ -1,6 +1,11 @@
-__import__('pysqlite3')
 import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')    
+
+# Verificar e configurar o pysqlite3
+try:
+    import pysqlite3
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    pass
 
 import os
 import re
@@ -9,11 +14,11 @@ from docx import Document as DocxDocument
 import streamlit as st
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-from langchain_openai import ChatOpenAI
+from langchain.chat_models import ChatOpenAI
 import chromadb
 from chromadb.config import Settings
 import traceback
@@ -92,8 +97,7 @@ def carregar_arquivo(file_path):
 def reinicializar_chain():
     return ConversationalRetrievalChain.from_llm(
         llm=chat_model,
-        chain_type="map_reduce",
-        retriever=db.as_retriever(return_source_documents=True, top_k=5),
+        retriever=db.as_retriever(return_source_documents=True, search_type="similarity", search_kwargs={"k": 5}),
         memory=ConversationBufferMemory(memory_key='chat_history', return_messages=True)
     )
 
@@ -172,13 +176,13 @@ def iniciar_processo(uploaded_files):
 
         os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
 
-        embedder = OpenAIEmbeddings(model="text-embedding-3-large")
+        embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
 
         # Configuração manual do cliente Chroma
         chroma_settings = Settings(anonymized_telemetry=False)
         db = Chroma.from_documents(docs, embedder, client_settings=chroma_settings)
 
-        chat_model = ChatOpenAI(temperature=0.5, model_name="gpt-4o")
+        chat_model = ChatOpenAI(temperature=0.5, model_name="gpt-4")
         memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
         retrieval_chain_config = reinicializar_chain()
         
@@ -209,6 +213,7 @@ def reinstall_dependencies():
     try:
         # Lista de pacotes necessários
         packages = [
+            "streamlit",
             "langchain",
             "openai",
             "python-docx",
@@ -219,9 +224,7 @@ def reinstall_dependencies():
             "langchain_openai",
             "langchain-chroma",
             "PyMuPDF",
-            "chromadb",
-            "streamlit",
-            "tiktoken"
+            "chromadb"
         ]
 
         # Instalar cada pacote
