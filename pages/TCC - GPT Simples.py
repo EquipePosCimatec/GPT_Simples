@@ -201,7 +201,7 @@ def gerar_documento(retrieval_chain_config, tipo_documento_selecionado):
         return None
 
 def reboot_streamlit():
-    os.system("streamlit run --server.port 8502 app.py & disown")
+    os.system("streamlit run --server.port 8502 apresentação.py & disown")
 
 st.title('Gerador de Artefatos de Licitação do MPBA')
 
