@@ -1,9 +1,8 @@
 streamlit
 langchain
 openai
-docx
-chromadb
 python-docx
+chromadb
 docx2txt
 pysqlite3-binary
 langchain-community
