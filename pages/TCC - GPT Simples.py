@@ -14,6 +14,9 @@ from langchain_openai import ChatOpenAI
 import time
 import traceback
 
+# Verificar a versão do SQLite
+st.write(f"Versão do SQLite: {sqlite3.sqlite_version}")
+
 # Função para remover formatação Markdown do texto
 def limpar_formatacao_markdown(texto):
     texto = re.sub(r'\*\*([^*]+)\*\*', r'\1', texto)
