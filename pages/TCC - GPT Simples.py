@@ -1,6 +1,6 @@
 __import__('pysqlite3')
 import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')    
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 import os
 import re
@@ -9,7 +9,7 @@ from docx import Document as DocxDocument
 import streamlit as st
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from langchain.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
@@ -200,7 +200,10 @@ def gerar_documento(retrieval_chain_config, tipo_documento_selecionado):
         st.error(traceback.format_exc())
         return None
 
-st.subheader("Gerador de Artefatos de Licitação do MPBA")
+def reboot_streamlit():
+    os.system("streamlit run --server.port 8502 app.py & disown")
+
+st.title('Gerador de Artefatos de Licitação do MPBA')
 
 # Upload de arquivos
 uploaded_files = st.file_uploader("Carregue seus arquivos", accept_multiple_files=True, type=["pdf", "docx", "txt"])
@@ -226,3 +229,9 @@ if uploaded_files:
                         file_name=os.path.basename(caminho_salvo),
                         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     )
+
+# Botão para reiniciar o aplicativo do Streamlit
+st.subheader("Reiniciar o Aplicativo do Streamlit")
+st.write("Clique no botão abaixo para reiniciar o aplicativo do Streamlit.")
+if st.button('Reiniciar'):
+    reboot_streamlit()
