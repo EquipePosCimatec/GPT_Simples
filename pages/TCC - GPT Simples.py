@@ -6,11 +6,11 @@ import streamlit as st
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
 import time
+from langchain.vectorstores import Chroma
 
 # Função para remover formatação Markdown do texto
 def limpar_formatacao_markdown(texto):
