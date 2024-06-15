@@ -1,6 +1,6 @@
 __import__('pysqlite3')
 import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')    
 
 import os
 import re
@@ -9,7 +9,7 @@ from docx import Document as DocxDocument
 import streamlit as st
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
@@ -17,7 +17,6 @@ from langchain_openai import ChatOpenAI
 import chromadb
 from chromadb.config import Settings
 import traceback
-import subprocess
 
 # Função para remover formatação Markdown do texto
 def limpar_formatacao_markdown(texto):
@@ -34,14 +33,14 @@ def salvar_documento_docx(tipo_documento, conteudo):
     base_dir = os.path.join(user_home, "Downloads", "Artefatos")
     base_filename = f"{tipo_documento}.docx"
     caminho_docx = os.path.join(base_dir, base_filename)
-
+    
     if os.path.exists(caminho_docx):
         i = 1
         while os.path.exists(caminho_docx):
             base_filename = f"{tipo_documento} ({i}).docx"
             caminho_docx = os.path.join(base_dir, base_filename)
             i += 1
-
+    
     os.makedirs(os.path.dirname(caminho_docx), exist_ok=True)
     doc = DocxDocument()
 
@@ -92,7 +91,8 @@ def carregar_arquivo(file_path):
 def reinicializar_chain():
     return ConversationalRetrievalChain.from_llm(
         llm=chat_model,
-        retriever=db.as_retriever(return_source_documents=True, search_type="similarity", search_kwargs={"k": 5}),
+        chain_type="map_reduce",
+        retriever=db.as_retriever(return_source_documents=True, top_k=5),
         memory=ConversationBufferMemory(memory_key='chat_history', return_messages=True)
     )
 
@@ -177,7 +177,7 @@ def iniciar_processo(uploaded_files):
         chroma_settings = Settings(anonymized_telemetry=False)
         db = Chroma.from_documents(docs, embedder, client_settings=chroma_settings)
 
-        chat_model = ChatOpenAI(temperature=0.5, model_name="gpt-4")
+        chat_model = ChatOpenAI(temperature=0.5, model_name="gpt-4o")
         memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
         retrieval_chain_config = reinicializar_chain()
         
@@ -200,50 +200,7 @@ def gerar_documento(retrieval_chain_config, tipo_documento_selecionado):
         st.error(traceback.format_exc())
         return None
 
-def reset_app():
-    st.experimental_set_query_params()  # Remove all query parameters, resetting the app
-    st.experimental_rerun()
-
-def reinstall_dependencies():
-    try:
-        # Lista de pacotes necessários
-        packages = [
-            "streamlit",
-            "langchain",
-            "openai",
-            "python-docx",
-            "docx2txt",
-            "pysqlite3-binary",
-            "langchain-community",
-            "tiktoken",
-            "langchain_openai",
-            "langchain-chroma",
-            "PyMuPDF",
-            "chromadb"
-        ]
-
-        # Instalar cada pacote
-        for package in packages:
-            result = subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", package], capture_output=True, text=True)
-            if result.returncode != 0:
-                st.error(f"Erro ao reinstalar {package}: {result.stderr}")
-                return
-
-        st.success("Dependências reinstaladas com sucesso. Reiniciando aplicação...")
-        st.experimental_rerun()
-    except Exception as e:
-        st.error(f"Erro ao reinstalar dependências: {str(e)}")
-        st.error(traceback.format_exc())
-
 st.title("Gerador de Artefatos de Licitação do MPBA")
-
-# Botão para resetar a aplicação
-if st.button("Resetar Aplicação"):
-    reset_app()
-
-# Botão para reinstalar dependências
-if st.button("Reinstalar Dependências"):
-    reinstall_dependencies()
 
 # Upload de arquivos
 uploaded_files = st.file_uploader("Carregue seus arquivos", accept_multiple_files=True, type=["pdf", "docx", "txt"])
