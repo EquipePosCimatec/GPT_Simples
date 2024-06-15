@@ -1,4 +1,11 @@
-import sqlite3
+# Tentar importar e usar pysqlite3 ao invés de sqlite3 padrão
+try:
+    import pysqlite3 as sqlite3
+    st.success("Usando pysqlite3 para versão mais recente do SQLite.")
+except ImportError:
+    import sqlite3
+    st.warning("Usando sqlite3 padrão, pode não ser a versão necessária.")
+    
 import os
 import re
 import fitz  # PyMuPDF para leitura de PDFs
