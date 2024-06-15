@@ -174,6 +174,18 @@ def iniciar_processo(uploaded_files):
     st.success("Documentos carregados e processados com sucesso.")
     return True
 
+def gerar_documento(retrieval_chain_config, tipo_documento_selecionado):
+    try:
+        caminho_salvo = preencher_sequencia_documentos(retrieval_chain_config, tipo_documento_selecionado)
+        st.success("Documento gerado com sucesso.")
+        st.markdown(f"[Baixar documento]({caminho_salvo})", unsafe_allow_html=True)
+
+        # Aguarda 5 segundos antes de recarregar a página
+        time.sleep(5)
+        st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Erro ao gerar documento: {str(e)}")
+
 st.title("Gerador de Artefatos de Licitação do MPBA")
 
 # Upload de arquivos
@@ -190,14 +202,4 @@ if uploaded_files:
 
         if st.button("Gerar Documento"):
             with st.spinner('Gerando documento, por favor aguarde...'):
-                try:
-                    caminho_salvo = preencher_sequencia_documentos(retrieval_chain_config, tipo_documento_selecionado)
-                    st.success("Documento gerado com sucesso.")
-                    st.markdown(f"[Baixar documento]({caminho_salvo})", unsafe_allow_html=True)
-
-                    # Aguarda 5 segundos antes de recarregar a página
-                    time.sleep(5)
-                    st.experimental_rerun()
-
-                except Exception as e:
-                    st.error(f"Erro ao gerar documento: {str(e)}")
+                gerar_documento(retrieval_chain_config, tipo_documento_selecionado)
