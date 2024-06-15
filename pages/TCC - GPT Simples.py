@@ -1,3 +1,7 @@
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')    
+
 import os
 import re
 import fitz  # PyMuPDF para leitura de PDFs
@@ -12,21 +16,6 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
 import time
 import traceback
-
-# Verificar a versão do SQLite
-def verificar_sqlite():
-    try:
-        import pysqlite3 as sqlite3
-        st.success("Usando pysqlite3 para versão mais recente do SQLite.")
-    except ImportError:
-        import sqlite3
-        st.warning("Usando sqlite3 padrão, pode não ser a versão necessária.")
-    
-    # Verificar a versão do SQLite
-    st.write(f"Versão do SQLite: {sqlite3.sqlite_version}")
-
-# Verificar a versão do SQLite
-verificar_sqlite()
 
 # Função para remover formatação Markdown do texto
 def limpar_formatacao_markdown(texto):
