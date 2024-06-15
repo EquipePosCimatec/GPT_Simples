@@ -17,6 +17,7 @@ from langchain_openai import ChatOpenAI
 import chromadb
 from chromadb.config import Settings
 import traceback
+import subprocess
 
 # Função para remover formatação Markdown do texto
 def limpar_formatacao_markdown(texto):
@@ -204,11 +205,43 @@ def reset_app():
     st.experimental_set_query_params()  # Remove all query parameters, resetting the app
     st.experimental_rerun()
 
+def reinstall_dependencies():
+    try:
+        # Lista de pacotes necessários
+        packages = [
+            "streamlit",
+            "pysqlite3",
+            "openai",
+            "docx",
+            "pymupdf",  # PyMuPDF
+            "python-docx",
+            "chromadb",
+            "langchain",
+            "langchain_openai",
+            "langchain_chroma",
+            "langchain_community",
+            "tiktoken"
+        ]
+
+        # Instalar cada pacote
+        for package in packages:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package])
+
+        st.success("Dependências reinstaladas com sucesso. Reiniciando aplicação...")
+        st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Erro ao reinstalar dependências: {str(e)}")
+        st.error(traceback.format_exc())
+
 st.title("Gerador de Artefatos de Licitação do MPBA")
 
 # Botão para resetar a aplicação
 if st.button("Resetar Aplicação"):
     reset_app()
+
+# Botão para reinstalar dependências
+if st.button("Reinstalar Dependências"):
+    reinstall_dependencies()
 
 # Upload de arquivos
 uploaded_files = st.file_uploader("Carregue seus arquivos", accept_multiple_files=True, type=["pdf", "docx", "txt"])
