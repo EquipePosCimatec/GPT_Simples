@@ -4,10 +4,8 @@ openai
 python-docx
 docx2txt
 pysqlite3-binary
-pysqlite3
 langchain-community
 tiktoken
 langchain_openai
 langchain-chroma
-chromadb
 PyMuPDF
