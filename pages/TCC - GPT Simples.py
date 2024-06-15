@@ -16,7 +16,6 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
 import chromadb
 from chromadb.config import Settings
-import time
 import traceback
 
 # Função para remover formatação Markdown do texto
@@ -220,6 +219,10 @@ if uploaded_files:
                 caminho_salvo = gerar_documento(retrieval_chain_config, tipo_documento_selecionado)
 
             if caminho_salvo:
-                st.markdown(f"[Baixar documento]({caminho_salvo})", unsafe_allow_html=True)
-                time.sleep(5)
-                st.experimental_rerun()
+                with open(caminho_salvo, "rb") as file:
+                    btn = st.download_button(
+                        label="Download Documento",
+                        data=file,
+                        file_name=os.path.basename(caminho_salvo),
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    )
