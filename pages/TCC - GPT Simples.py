@@ -14,6 +14,8 @@ from langchain.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
+import chromadb
+from chromadb.config import Settings
 import time
 import traceback
 
@@ -171,8 +173,13 @@ def iniciar_processo(uploaded_files):
         os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
 
         embedder = OpenAIEmbeddings(model="text-embedding-3-large")
-        db = Chroma.from_documents(docs, embedder)
-        
+
+        # Configuração manual do cliente Chroma
+        chroma_settings = Settings(chroma_db_impl="sqlite",
+                                   chroma_db_dir="./chroma_db",
+                                   anonymized_telemetry=False)
+        db = Chroma.from_documents(docs, embedder, client_settings=chroma_settings)
+
         chat_model = ChatOpenAI(temperature=0.5, model_name="gpt-4o")
         memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
         retrieval_chain_config = reinicializar_chain()
