@@ -209,17 +209,18 @@ def reinstall_dependencies():
     try:
         # Lista de pacotes necessários
         packages = [
-            "streamlit",
-            "pysqlite3",
-            "openai",
-            "docx",
-            "pymupdf",  # PyMuPDF
-            "python-docx",
-            "chromadb",
             "langchain",
+            "openai",
+            "python-docx",
+            "docx2txt",
+            "pysqlite3-binary",
+            "langchain-community",
+            "tiktoken",
             "langchain_openai",
-            "langchain_chroma",
-            "langchain_community",
+            "langchain-chroma",
+            "PyMuPDF",
+            "chromadb",
+            "streamlit",
             "tiktoken"
         ]
 
