@@ -6,11 +6,12 @@ import streamlit as st
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
+from langchain.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
 import time
-from langchain.vectorstores import Chroma
+import traceback
 
 # Função para remover formatação Markdown do texto
 def limpar_formatacao_markdown(texto):
@@ -153,26 +154,32 @@ def salvar_documento(tipo_documento, conteudo):
 def iniciar_processo(uploaded_files):
     global retrieval_chain_config, chat_model, db
 
-    documentos = []
-    for uploaded_file in uploaded_files:
-        with open(uploaded_file.name, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        documentos.extend(carregar_arquivo(uploaded_file.name))
+    try:
+        documentos = []
+        for uploaded_file in uploaded_files:
+            with open(uploaded_file.name, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            documentos.extend(carregar_arquivo(uploaded_file.name))
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=50)
-    docs = text_splitter.split_documents(documentos)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=50)
+        docs = text_splitter.split_documents(documentos)
 
-    os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
+        os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
 
-    embedder = OpenAIEmbeddings(model="text-embedding-3-large")
-    db = Chroma.from_documents(docs, embedder)
-    
-    chat_model = ChatOpenAI(temperature=0.5, model_name="gpt-4o")
-    memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
-    retrieval_chain_config = reinicializar_chain()
-    
-    st.success("Documentos carregados e processados com sucesso.")
-    return True
+        embedder = OpenAIEmbeddings(model="text-embedding-3-large")
+        db = Chroma.from_documents(docs, embedder)
+        
+        chat_model = ChatOpenAI(temperature=0.5, model_name="gpt-4o")
+        memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+        retrieval_chain_config = reinicializar_chain()
+        
+        st.success("Documentos carregados e processados com sucesso.")
+        return True
+
+    except Exception as e:
+        st.error(f"Erro ao iniciar o processo: {str(e)}")
+        st.error(traceback.format_exc())
+        return False
 
 def gerar_documento(retrieval_chain_config, tipo_documento_selecionado):
     try:
@@ -185,6 +192,7 @@ def gerar_documento(retrieval_chain_config, tipo_documento_selecionado):
         st.experimental_rerun()
     except Exception as e:
         st.error(f"Erro ao gerar documento: {str(e)}")
+        st.error(traceback.format_exc())
 
 st.title("Gerador de Artefatos de Licitação do MPBA")
 
