@@ -13,7 +13,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 import chromadb
 from chromadb.config import Settings
 import traceback
