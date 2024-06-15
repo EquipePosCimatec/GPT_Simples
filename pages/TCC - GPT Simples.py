@@ -201,9 +201,7 @@ def gerar_documento(retrieval_chain_config, tipo_documento_selecionado):
         return None
 
 def reset_app():
-    # Limpar todos os estados da sessão
-    for key in st.session_state.keys():
-        del st.session_state[key]
+    st.experimental_set_query_params()  # Remove all query parameters, resetting the app
     st.experimental_rerun()
 
 st.title("Gerador de Artefatos de Licitação do MPBA")
