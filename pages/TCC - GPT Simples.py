@@ -11,7 +11,6 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
 import time
-import signal
 
 # Função para remover formatação Markdown do texto
 def limpar_formatacao_markdown(texto):
@@ -163,7 +162,6 @@ def iniciar_processo(uploaded_files):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=50)
     docs = text_splitter.split_documents(documentos)
 
-    # Set the API key as an environment variable
     os.environ["OPENAI_API_KEY"] = st.secrets["KEY"]
 
     embedder = OpenAIEmbeddings(model="text-embedding-3-large")
@@ -174,9 +172,7 @@ def iniciar_processo(uploaded_files):
     retrieval_chain_config = reinicializar_chain()
     
     st.success("Documentos carregados e processados com sucesso.")
-    st.write("Arquivos carregados:", [file.name for file in file_paths])
     return True
-return False
 
 st.title("Gerador de Artefatos de Licitação do MPBA")
 
@@ -184,25 +180,24 @@ st.title("Gerador de Artefatos de Licitação do MPBA")
 uploaded_files = st.file_uploader("Carregue seus arquivos", accept_multiple_files=True, type=["pdf", "docx", "txt"])
 
 if uploaded_files:
-    iniciar_processo(uploaded_files)
+    if iniciar_processo(uploaded_files):
+        st.write("Arquivos carregados:")
+        for file in uploaded_files:
+            st.write(file.name)
 
-    st.write("Arquivos carregados:")
-    for file in uploaded_files:
-        st.write(file.name)
+        # Dropdown para selecionar o tipo de documento
+        tipo_documento_selecionado = st.selectbox("Selecione o tipo de documento", list(templates.keys()))
 
-    # Dropdown para selecionar o tipo de documento
-    tipo_documento_selecionado = st.selectbox("Selecione o tipo de documento", list(templates.keys()))
-    
-    if st.button("Gerar Documento"):
-        with st.spinner('Gerando documento, por favor aguarde...'):
-            try:
-                caminho_salvo = preencher_sequencia_documentos(retrieval_chain_config, tipo_documento_selecionado)
-                st.success("Documento gerado com sucesso.")
-                st.markdown(f"[Baixar documento]({caminho_salvo})", unsafe_allow_html=True)
-                
-                # Aguarda 5 segundos antes de recarregar a página
-                time.sleep(5)
-                st.experimental_rerun()
-                
-            except Exception as e:
-                st.error(f"Erro ao gerar documento: {str(e)}")
+        if st.button("Gerar Documento"):
+            with st.spinner('Gerando documento, por favor aguarde...'):
+                try:
+                    caminho_salvo = preencher_sequencia_documentos(retrieval_chain_config, tipo_documento_selecionado)
+                    st.success("Documento gerado com sucesso.")
+                    st.markdown(f"[Baixar documento]({caminho_salvo})", unsafe_allow_html=True)
+
+                    # Aguarda 5 segundos antes de recarregar a página
+                    time.sleep(5)
+                    st.experimental_rerun()
+
+                except Exception as e:
+                    st.error(f"Erro ao gerar documento: {str(e)}")
