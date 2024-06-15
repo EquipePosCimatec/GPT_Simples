@@ -175,9 +175,7 @@ def iniciar_processo(uploaded_files):
         embedder = OpenAIEmbeddings(model="text-embedding-3-large")
 
         # Configuração manual do cliente Chroma
-        chroma_settings = Settings(chroma_db_impl="sqlite",
-                                   chroma_db_dir="./chroma_db",
-                                   anonymized_telemetry=False)
+        chroma_settings = Settings(anonymized_telemetry=False)
         db = Chroma.from_documents(docs, embedder, client_settings=chroma_settings)
 
         chat_model = ChatOpenAI(temperature=0.5, model_name="gpt-4o")
