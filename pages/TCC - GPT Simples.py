@@ -14,9 +14,6 @@ from langchain_openai import ChatOpenAI
 import time
 import traceback
 
-# Verificar a versão do SQLite
-st.write(f"Versão do SQLite: {sqlite3.sqlite_version}")
-
 # Função para remover formatação Markdown do texto
 def limpar_formatacao_markdown(texto):
     texto = re.sub(r'\*\*([^*]+)\*\*', r'\1', texto)
@@ -157,7 +154,10 @@ def salvar_documento(tipo_documento, conteudo):
 
 def iniciar_processo(uploaded_files):
     global retrieval_chain_config, chat_model, db
-
+    
+    # Verificar a versão do SQLite
+    st.write(f"Versão do SQLite: {sqlite3.sqlite_version}")
+    
     try:
         documentos = []
         for uploaded_file in uploaded_files:
