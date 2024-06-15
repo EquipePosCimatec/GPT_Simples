@@ -2,7 +2,6 @@ streamlit
 langchain
 openai
 python-docx
-sqlite3
 chromadb
 docx2txt
 pysqlite3-binary
