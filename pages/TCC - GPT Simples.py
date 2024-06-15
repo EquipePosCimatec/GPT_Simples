@@ -200,7 +200,7 @@ def gerar_documento(retrieval_chain_config, tipo_documento_selecionado):
         st.error(traceback.format_exc())
         return None
 
-st.title("Gerador de Artefatos de Licitação do MPBA")
+st.markdown("Gerador de Artefatos de Licitação do MPBA")
 
 # Upload de arquivos
 uploaded_files = st.file_uploader("Carregue seus arquivos", accept_multiple_files=True, type=["pdf", "docx", "txt"])
