@@ -200,7 +200,17 @@ def gerar_documento(retrieval_chain_config, tipo_documento_selecionado):
         st.error(traceback.format_exc())
         return None
 
+def reset_app():
+    # Limpar todos os estados da sessão
+    for key in st.session_state.keys():
+        del st.session_state[key]
+    st.experimental_rerun()
+
 st.title("Gerador de Artefatos de Licitação do MPBA")
+
+# Botão para resetar a aplicação
+if st.button("Resetar Aplicação"):
+    reset_app()
 
 # Upload de arquivos
 uploaded_files = st.file_uploader("Carregue seus arquivos", accept_multiple_files=True, type=["pdf", "docx", "txt"])
