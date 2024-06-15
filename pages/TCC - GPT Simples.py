@@ -225,7 +225,10 @@ def reinstall_dependencies():
 
         # Instalar cada pacote
         for package in packages:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package])
+            result = subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", package], capture_output=True, text=True)
+            if result.returncode != 0:
+                st.error(f"Erro ao reinstalar {package}: {result.stderr}")
+                return
 
         st.success("Dependências reinstaladas com sucesso. Reiniciando aplicação...")
         st.experimental_rerun()
