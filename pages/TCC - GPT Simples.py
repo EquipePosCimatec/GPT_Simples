@@ -27,7 +27,7 @@ def verificar_sqlite():
 verificar_sqlite()
 
 from langchain.vectorstores import Chroma
-import Chroma
+import Chromadb
 
 
 # Função para remover formatação Markdown do texto
