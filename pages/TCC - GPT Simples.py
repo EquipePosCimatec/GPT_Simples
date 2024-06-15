@@ -194,7 +194,7 @@ def gerar_documento(retrieval_chain_config, tipo_documento_selecionado):
     try:
         caminho_salvo = preencher_sequencia_documentos(retrieval_chain_config, tipo_documento_selecionado)
         st.success("Documento gerado com sucesso.")
-        st.markdown(f"[Baixar documento]({caminho_salvo})", unsafe_allow_html=True)
+        st.session_state['caminho_salvo'] = caminho_salvo
         return caminho_salvo
     except Exception as e:
         st.error(f"Erro ao gerar documento: {str(e)}")
@@ -220,7 +220,6 @@ if uploaded_files:
                 caminho_salvo = gerar_documento(retrieval_chain_config, tipo_documento_selecionado)
 
             if caminho_salvo:
-                if st.button("Download Documento"):
-                    st.markdown(f"[Baixar documento]({caminho_salvo})", unsafe_allow_html=True)
-                    time.sleep(5)
-                    st.experimental_rerun()
+                st.markdown(f"[Baixar documento]({caminho_salvo})", unsafe_allow_html=True)
+                time.sleep(5)
+                st.experimental_rerun()
