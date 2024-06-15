@@ -9,3 +9,4 @@ tiktoken
 langchain_openai
 langchain-chroma
 PyMuPDF
+chromadb
